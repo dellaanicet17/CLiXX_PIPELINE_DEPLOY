@@ -11,7 +11,7 @@ credentials=assumed_role_object['Credentials']
 print(credentials)
 
 # Create RDS client
-rds_client = boto3.client('rds')
+rds_client = boto3.client('rds',aws_access_key_id=credentials['AccessKeyId'],aws_secret_access_key=credentials['SecretAccessKey'],aws_session_token=credentials['SessionToken'])
 
 # Restore DB instance from snapshot
 response = rds_client.restore_db_instance_from_db_snapshot(
