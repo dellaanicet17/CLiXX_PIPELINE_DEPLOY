@@ -6,7 +6,7 @@ KEY_PAIR_NAME = 'stack_devops_kp'
 AMI_ID = 'ami-00f251754ac5da7f0' # Amazon Linux 2
 SUBNET_ID = 'subnet-0e9f4974af6be42ae' 
 SECURITY_GROUP_ID = 'sg-024f0157b123d6a8c'
-INSTANCE_PROFILE = 'CLiXX-ASG'
+INSTANCE_PROFILE = 'CLiXX'
 USER_DATA = '''#!/bin/bash -xe
  # Variables - Update these as needed
 CLiXX_GIT_REPO_URL="https://github.com/stackitgit/CliXX_Retail_Repository.git"
@@ -98,7 +98,7 @@ instances = EC2_RESOURCE.create_instances(
             'Tags': [
                 {
                     'Key': 'Name',
-                    'Value': 'CLiXX-ASG'
+                    'Value': 'CLiXX'
                 },
             ]
         },
@@ -110,9 +110,9 @@ for instance in instances:
     
     instance.wait_until_running()
     
-    EC2_CLIENT.associate_iam_instance_profile(
-        IamInstanceProfile = {'Name': INSTANCE_PROFILE},
-        InstanceId = instance.id,
-    )
-    print(f'EC2 Instance Profile "{INSTANCE_PROFILE}" has been attached')
-    print(f'EC2 instance "{instance.id}" has been started')
+    #EC2_CLIENT.associate_iam_instance_profile(
+    #    IamInstanceProfile = {'Name': INSTANCE_PROFILE},
+    #    InstanceId = instance.id,
+    #)
+    #print(f'EC2 Instance Profile "{INSTANCE_PROFILE}" has been attached')
+    #print(f'EC2 instance "{instance.id}" has been started')
