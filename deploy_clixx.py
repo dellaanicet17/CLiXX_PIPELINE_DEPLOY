@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import boto3
+import boto3,botocore
+
 AWS_REGION = "us-east-1"
 KEY_PAIR_NAME = 'stack_devops_kp'
 AMI_ID = 'ami-00f251754ac5da7f0' # Amazon Linux 2
@@ -73,8 +74,15 @@ mysql -u ${WordPress_DB_USER} -p${WordPress_DB_PASS} -h ${WordPress_DB_HOST} -D 
 UPDATE wp_options SET option_value = "${PUBLIC_IPV4}" WHERE option_value = "CliXX-APP-NLB-a7ece55c49d173cc.elb.us-east-1.amazonaws.com";
 UPDATE wp_options SET option_value = "${PUBLIC_IPV4}" WHERE option_value LIKE 'http%';
 '''
-EC2_RESOURCE = boto3.resource('ec2', region_name=AWS_REGION)
-EC2_CLIENT = boto3.client('ec2', region_name=AWS_REGION)
+
+sts_client=boto3.client('sts')
+#Calling the assume_role function
+assumed_role_object=sts_client.assume_role(RoleArn='arn:aws:iam::043309319757:role/Engineer', RoleSessionName='mysession')
+credentials=assumed_role_object['Credentials']
+print(credentials)
+
+EC2_RESOURCE = boto3.resource('ec2',region_name=AWS_REGION,aws_access_key_id=credentials['AccessKeyId'],aws_secret_access_key=credentials['SecretAccessKey'],aws_session_token=credentials['SessionToken'])
+EC2_CLIENT = boto3.client('ec2',region_name=AWS_REGION,aws_access_key_id=credentials['AccessKeyId'],aws_secret_access_key=credentials['SecretAccessKey'],aws_session_token=credentials['SessionToken'])
 instances = EC2_RESOURCE.create_instances(
     MinCount = 1,
     MaxCount = 1,
