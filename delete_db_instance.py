@@ -12,8 +12,8 @@ credentials=assumed_role_object['Credentials']
 print(credentials)
 
 # Create an RDS client
-rds_client = boto3.client('rds',aws_access_key_id=credentials['AccessKeyId'],aws_secret_access_key=credentials['SecretAccessKey'],aws_session_token=credentials['SessionToken'])
-
+#rds_client=boto3.client('rds',aws_access_key_id=credentials['AccessKeyId'],aws_secret_access_key=credentials['SecretAccessKey'],aws_session_token=credentials['SessionToken'])
+rds_client=boto3.client('rds',aws_access_key_id=credentials['AccessKeyId'],aws_secret_access_key=credentials['SecretAccessKey'],aws_session_token=credentials['SessionToken'])
 # Delete the DB instance
 response = rds_client.delete_db_instance(
     DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
