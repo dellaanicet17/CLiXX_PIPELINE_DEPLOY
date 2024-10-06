@@ -98,7 +98,7 @@ instances = EC2_RESOURCE.create_instances(
             'Tags': [
                 {
                     'Key': 'Name',
-                    'Value': 'my-ec2-instance'
+                    'Value': 'CLiXX-ASG'
                 },
             ]
         },
