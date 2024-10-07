@@ -14,22 +14,25 @@ phases:
       - echo starting build on `date`
       - echo "Creating CliXX Security Group for apps and database"
       - |
-          flag='deploy'
-          if [[ $flag == 'restore' ]]
-          then
-              python restore_db_instance_from_db_snapshot.py
-          elif [[ $flag == 'deploy' ]]
-          then
-              python deploy_clixx.py
-          elif [[ $flag == 'delete' ]]
-          then
-              python delete_db_instance.py
-          elif [[ $flag == 'assume' ]]
-          then
-              python assume_role.py
+          flag='deploy'  # Set flag value; make sure this is dynamically set as needed
+
+          if [[ $flag == 'restore' ]]; then
+            echo "Restoring DB instance from snapshot..."
+            python restore_db_instance_from_db_snapshot.py
+          elif [[ $flag == 'deploy' ]]; then
+            echo "Deploying CLiXX..."
+            python deploy_clixx.py
+          elif [[ $flag == 'delete' ]]; then
+            echo "Deleting DB instance..."
+            python delete_db_instance.py
+          elif [[ $flag == 'assume' ]]; then
+            echo "Assuming role..."
+            python assume_role.py
+          else
+            echo "Invalid option. Please set the flag correctly."
           fi
+
   post_build:
     commands:
       - echo Build completed on `date`
 
-      
