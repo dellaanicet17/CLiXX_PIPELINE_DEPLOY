@@ -12,7 +12,7 @@ db_instance_identifier = 'wordpressdbclixx'
 db_snapshot_identifier = 'arn:aws:rds:us-east-1:577701061234:snapshot:wordpressdbclixx-ecs-snapshot'
 db_instance_class = 'db.m6gd.large'  # Example instance class
 availabilityzone = 'us-east-1a'
-security_group_id = 'sg-024f0157b123d6a8c'
+security_group_id = ['sg-024f0157b123d6a8c']
 
 # Create RDS client
 rds_client=boto3.client('rds',aws_access_key_id=credentials['AccessKeyId'],aws_secret_access_key=credentials['SecretAccessKey'],aws_session_token=credentials['SessionToken'])
