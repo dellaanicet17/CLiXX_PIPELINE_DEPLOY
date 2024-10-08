@@ -95,8 +95,10 @@ inbound_rules = [
     {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306},# MySQL/Aurora
     {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049} # NFS
 ]
+# Get the security group resource
+SECURITY_GROUP = ec2_resource.SecurityGroup(security_group_id)
 for rule in inbound_rules:
-    security_group.authorize_ingress(
+    SECURITY_GROUP.authorize_ingress(
         CidrIp=rule['CidrIp'],
         IpProtocol=rule['IpProtocol'],
         FromPort=rule['FromPort'],
