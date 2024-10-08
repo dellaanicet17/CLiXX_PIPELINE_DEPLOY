@@ -184,13 +184,17 @@ instances = ec2_resource.create_instances(
         },
     ]
 )
+
 for instance in instances:
     print(f'EC2 instance "{instance.id}" has been launched')
     instance.wait_until_running()
-    
+
+  
+
     #EC2_CLIENT.associate_iam_instance_profile(
     #    IamInstanceProfile = {'Name': INSTANCE_PROFILE},
     #    InstanceId = instance.id,
     #)
-    #print(f'EC2 Instance Profile "{INSTANCE_PROFILE}" has been attached')
+    
     #print(f'EC2 instance "{instance.id}" has been started')
+    #print(f'EC2 Instance Profile "{INSTANCE_PROFILE}" has been attached')
