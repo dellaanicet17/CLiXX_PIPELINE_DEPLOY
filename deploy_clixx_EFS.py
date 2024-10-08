@@ -52,7 +52,7 @@ db_snapshot_identifier = 'arn:aws:rds:us-east-1:577701061234:snapshot:wordpressd
 db_instance_class = 'db.m6gd.large'
 availability_zone = 'us-east-1a'
 hosted_zone_id = 'Z04517273VCLIDX9UEQR7'
-record_name = 'dev.clixx-della.com'
+record_name = 'test.clixx-della.com'
 
 # Step 1: Create EFS file system
 efs_response = efs_client.create_file_system(
