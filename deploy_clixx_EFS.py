@@ -14,6 +14,14 @@ ec2_client = boto3.client('ec2', region_name="us-east-1",
                           aws_access_key_id=credentials['AccessKeyId'], 
                           aws_secret_access_key=credentials['SecretAccessKey'], 
                           aws_session_token=credentials['SessionToken'])
+# Create EC2 resource with assumed role credentials
+ec2_resource = boto3.resource(
+    'ec2',
+    region_name=aws_region,
+    aws_access_key_id=credentials['AccessKeyId'],
+    aws_secret_access_key=credentials['SecretAccessKey'],
+    aws_session_token=credentials['SessionToken']
+)
 
 elbv2_client = boto3.client('elbv2', region_name="us-east-1", 
                             aws_access_key_id=credentials['AccessKeyId'], 
@@ -68,7 +76,7 @@ file_system_id = efs_response['FileSystemId']
 
 
 # Step 2: Create Security group
-security_group = ec2_client.create_security_group(
+security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
     GroupName='Test1_Stack_Web_DMZ',
     VpcId=vpc_id,
@@ -85,7 +93,7 @@ security_group = ec2_client.create_security_group(
     ]
 )
 # Store the security group ID in a variable
-security_group_id = security_group['GroupId']
+security_group_id = security_group.id
 
 # Authorize inbound rules (SSH, HTTP, HTTPS, MySQL/Aurora, NFS)
 inbound_rules = [
@@ -95,10 +103,8 @@ inbound_rules = [
     {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306},# MySQL/Aurora
     {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049} # NFS
 ]
-# Get the security group resource
-SECURITY_GROUP = ec2_resource.SecurityGroup(security_group_id)
 for rule in inbound_rules:
-    SECURITY_GROUP.authorize_ingress(
+        security_group.authorize_ingress(
         CidrIp=rule['CidrIp'],
         IpProtocol=rule['IpProtocol'],
         FromPort=rule['FromPort'],
