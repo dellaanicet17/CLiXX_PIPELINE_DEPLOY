@@ -44,6 +44,7 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 aws_region = "us-east-1"
 vpc_id = 'vpc-0785754acd9374fb6'
 subnet_id = 'subnet-0e9f4974af6be42ae'
+subnet_id2 = 'subnet-0ff64f61153db745d'
 ami_id = 'ami-00f251754ac5da7f0'
 key_pair_name = 'stack_devops_kp'
 instance_type = 't2.micro'
@@ -65,24 +66,44 @@ efs_response = efs_client.create_file_system(
 )
 file_system_id = efs_response['FileSystemId']
 
-# Step 2: Create Security Group
+
+# Step 2: Create Security group
 security_group = ec2_client.create_security_group(
-    Description='Allow inbound traffic for web services',
-    GroupName='Test_Stack_Web_DMZ',
+    Description='Allow inbound traffic for various services',
+    GroupName='Test1_Stack_Web_DMZ',
     VpcId=vpc_id,
     TagSpecifications=[
         {
             'ResourceType': 'security-group',
             'Tags': [
                 {
-                    'Key': 'Name',
-                    'Value': 'Test_Stack_Web_DMZ'
+                    'Key': 'Name', 
+                    'Value': 'Test1_Stack_Web_DMZ'
                 },
             ]
         },
     ]
 )
+# Store the security group ID in a variable
 security_group_id = security_group['GroupId']
+
+# Authorize inbound rules (SSH, HTTP, HTTPS, MySQL/Aurora, NFS)
+inbound_rules = [
+    {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22},    # SSH
+    {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 80, 'ToPort': 80},    # HTTP
+    {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 443, 'ToPort': 443},  # HTTPS
+    {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306},# MySQL/Aurora
+    {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049} # NFS
+]
+for rule in inbound_rules:
+    security_group.authorize_ingress(
+        CidrIp=rule['CidrIp'],
+        IpProtocol=rule['IpProtocol'],
+        FromPort=rule['FromPort'],
+        ToPort=rule['ToPort']
+    )
+# Print the created security group ID
+print(f"Security Group {security_group_id} with inbound rules for SSH, HTTP, HTTPS, NFS, MySQL/Aurora has been created.")
 
 # Step 3: Restore DB Instance from Snapshot
 rds_client.restore_db_instance_from_db_snapshot(
@@ -108,17 +129,19 @@ target_group_arn = target_group['TargetGroups'][0]['TargetGroupArn']
 # Step 5: Create Application Load Balancer
 load_balancer = elbv2_client.create_load_balancer(
     Name='CLiXX-LB',
-    Subnets=[subnet_id],
+    Subnets=[subnet_id, subnet_id2],
     SecurityGroups=[security_group_id],
     Scheme='internet-facing',
     Type='application',
     IpAddressType='ipv4',
-    TagSpecifications=[
+    Tags=[
         {
-            'ResourceType': 'load-balancer',
-            'Tags': [
-                {'Key': 'Name', 'Value': 'CLiXX-LB'}
-            ]
+            'Key': 'Name',
+            'Value': 'CLiXX-LB'
+        },
+        {
+            'Key': 'Environment',
+            'Value': 'dev'
         }
     ]
 )
