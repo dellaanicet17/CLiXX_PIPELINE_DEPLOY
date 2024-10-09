@@ -74,7 +74,7 @@ file_system_id = efs_response['FileSystemId']
 # Step 2: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
-    GroupName='Test1_Stack_Web_DMZ',
+    GroupName='Test_Stack_Web_DMZ',
     VpcId=vpc_id,
     TagSpecifications=[
         {
@@ -82,7 +82,7 @@ security_group = ec2_resource.create_security_group(
             'Tags': [
                 {
                     'Key': 'Name', 
-                    'Value': 'Test1_Stack_Web_DMZ'
+                    'Value': 'Test_Stack_Web_DMZ'
                 },
             ]
         },
@@ -188,7 +188,7 @@ elbv2_client.create_listener(
 route53_client.change_resource_record_sets(
     HostedZoneId=hosted_zone_id,
     ChangeBatch={
-        'Comment': 'Create a record for the WordPress Load Balancer',
+        'Comment': 'Create a record for the CLixx Load Balancer',
         'Changes': [
             {
                 'Action': 'CREATE',
@@ -196,7 +196,7 @@ route53_client.change_resource_record_sets(
                     'Name': record_name,
                     'Type': 'A',
                     'AliasTarget': {
-                        'HostedZoneId': 'Z04517273VCLIDX9UEQR7',  # Hosted zone ID for ALB in us-east-1
+                        'HostedZoneId': 'Z35SXDOTRQ7X7K',  # Hosted zone ID for ALB in us-east-1
                         'DNSName': load_balancer['LoadBalancers'][0]['DNSName'],
                         'EvaluateTargetHealth': False
                     }
