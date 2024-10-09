@@ -46,21 +46,21 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_session_token=credentials['SessionToken'])
 
 ##################### Step 1: Delete the DB instance
-response = rds_client.delete_db_instance(
-    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
-    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
-    DeleteAutomatedBackups=True  # Optional, deletes all automated backups
-)
-print("DB Instance deletion initiated:", response)
+#response = rds_client.delete_db_instance(
+#    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
+#    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
+#   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
+#)
+#print("DB Instance deletion initiated:", response)
 
-## Step 2: Delete security Group
+##################### Step 2: Delete security Group
 response = ec2_client.delete_security_group(
     #GroupId='string',
-    GroupName='Test1_Stack_Web_DMZ'
+    GroupName='Test_Stack_Web_DMZ'
     )
 print(response)
 
-#################### Step 3: Delete EFS file system
+##################### Step 3: Delete EFS file system
 # EFS name to delete
 efs_name = 'CLiXX-EFS' 
 
