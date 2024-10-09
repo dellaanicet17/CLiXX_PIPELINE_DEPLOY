@@ -60,7 +60,24 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 #    )
 #print(response)
 
-##################### Step 3: Delete EFS file system
+################### Step 3: Delete Application Load Balancer
+# Name of the load balancer to delete
+#lb_name = 'CLiXX-LB'
+
+# Describe all load balancers to find the one with the specified name
+#load_balancers = elbv2_client.describe_load_balancers()
+
+# Loop through load balancers and find the one with the matching name
+#for lb in load_balancers['LoadBalancers']:
+#    if lb['LoadBalancerName'] == lb_name:
+#        lb_arn = lb['LoadBalancerArn']
+        
+        # Delete the load balancer using its ARN
+#        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
+#        print(f"Application Load Balancer '{lb_name}' deleted.")
+#        break
+
+##################### Step 4: Delete EFS file system
 # EFS name to delete
 #efs_name = 'CLiXX-EFS' 
 
@@ -80,23 +97,6 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 #            efs_client.delete_file_system(FileSystemId=file_system_id)
 #            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
 #            break
-
-################### Step 4: Delete Application Load Balancer
-# Name of the load balancer to delete
-lb_name = 'CLiXX-LB'
-
-# Describe all load balancers to find the one with the specified name
-load_balancers = elbv2_client.describe_load_balancers()
-
-# Loop through load balancers and find the one with the matching name
-for lb in load_balancers['LoadBalancers']:
-    if lb['LoadBalancerName'] == lb_name:
-        lb_arn = lb['LoadBalancerArn']
-        
-        # Delete the load balancer using its ARN
-        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
-        print(f"Application Load Balancer '{lb_name}' deleted.")
-        break
 
 #################### Step 5: Delete Target Group
 # Name of the target group to delete
