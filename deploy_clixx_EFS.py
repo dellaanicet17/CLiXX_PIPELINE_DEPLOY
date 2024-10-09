@@ -14,14 +14,11 @@ ec2_client = boto3.client('ec2', region_name="us-east-1",
                           aws_access_key_id=credentials['AccessKeyId'], 
                           aws_secret_access_key=credentials['SecretAccessKey'], 
                           aws_session_token=credentials['SessionToken'])
-# Create EC2 resource with assumed role credentials
-ec2_resource = boto3.resource(
-    'ec2',
-    region_name=aws_region,
-    aws_access_key_id=credentials['AccessKeyId'],
-    aws_secret_access_key=credentials['SecretAccessKey'],
-    aws_session_token=credentials['SessionToken']
-)
+
+ec2_resource = boto3.resource('ec2', region_name="us-east-1",
+                            aws_access_key_id=credentials['AccessKeyId'],
+                            aws_secret_access_key=credentials['SecretAccessKey'],
+                            aws_session_token=credentials['SessionToken'])
 
 elbv2_client = boto3.client('elbv2', region_name="us-east-1", 
                             aws_access_key_id=credentials['AccessKeyId'], 
@@ -73,7 +70,6 @@ efs_response = efs_client.create_file_system(
     ]
 )
 file_system_id = efs_response['FileSystemId']
-
 
 # Step 2: Create Security group
 security_group = ec2_resource.create_security_group(
