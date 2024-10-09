@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import boto3, botocore
+import boto3, botocore, base64
 
 # Assume Role to interact with AWS resources
 sts_client = boto3.client('sts')
@@ -74,7 +74,7 @@ file_system_id = efs_response['FileSystemId']
 # Step 2: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
-    GroupName='Test_Stack_Web_DMZ',
+    GroupName='Test1_Stack_Web_DMZ',
     VpcId=vpc_id,
     TagSpecifications=[
         {
@@ -82,7 +82,7 @@ security_group = ec2_resource.create_security_group(
             'Tags': [
                 {
                     'Key': 'Name', 
-                    'Value': 'Test_Stack_Web_DMZ'
+                    'Value': 'Test1_Stack_Web_DMZ'
                 },
             ]
         },
@@ -309,6 +309,9 @@ EOF
 fi
 '''
 
+# Encode the user data to Base64
+user_data_base64 = base64.b64encode(user_data_script.encode('utf-8')).decode('utf-8')
+
 # Step 8: Create Launch Template
 launch_template = ec2_client.create_launch_template(
     LaunchTemplateName='CLiXX-LT',
@@ -318,7 +321,7 @@ launch_template = ec2_client.create_launch_template(
         'InstanceType': instance_type,
         'KeyName': key_pair_name,
         'SecurityGroupIds': [security_group_id],
-        'UserData': user_data_script
+        'UserData': user_data_base64
     }
 )
 launch_template_id = launch_template['LaunchTemplate']['LaunchTemplateId']
@@ -342,3 +345,4 @@ autoscaling_client.create_auto_scaling_group(
         }
     ]
 )
+
