@@ -54,11 +54,11 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 #print("DB Instance deletion initiated:", response)
 
 ##################### Step 2: Delete security Group
-response = ec2_client.delete_security_group(
-    #GroupId='string',
-    GroupName='Test_Stack_Web_DMZ'
-    )
-print(response)
+#response = ec2_client.delete_security_group(
+#    #GroupId='string',
+#    GroupName='Test_Stack_Web_DMZ'
+#    )
+#print(response)
 
 ##################### Step 3: Delete EFS file system
 # EFS name to delete
@@ -69,17 +69,17 @@ print(response)
 
 # Loop through and find the EFS ID based on the Name tag
 #for fs in file_systems['FileSystems']:
-    tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
-    
-    # Check if the Name tag matches
-    for tag in tags['Tags']:
-        if tag['Key'] == 'Name' and tag['Value'] == efs_name:
-            file_system_id = fs['FileSystemId']
+#    tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
+#    
+#   # Check if the Name tag matches
+#    for tag in tags['Tags']:
+#        if tag['Key'] == 'Name' and tag['Value'] == efs_name:
+#           file_system_id = fs['FileSystemId']
             
             # Delete the EFS
-            efs_client.delete_file_system(FileSystemId=file_system_id)
-            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
-            break
+#            efs_client.delete_file_system(FileSystemId=file_system_id)
+#            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
+#            break
 
 ################### Step 4: Delete Application Load Balancer
 # Name of the load balancer to delete
