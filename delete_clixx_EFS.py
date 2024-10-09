@@ -100,62 +100,65 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 
 #################### Step 5: Delete Target Group
 # Name of the target group to delete
-tg_name = 'CLiXX-TG'
+#tg_name = 'CLiXX-TG'
 
 # Describe all target groups to find the one with the specified name
-target_groups = elbv2_client.describe_target_groups()
+#target_groups = elbv2_client.describe_target_groups()
 
 # Loop through target groups and find the one with the matching name
-for tg in target_groups['TargetGroups']:
-    if tg['TargetGroupName'] == tg_name:
-        tg_arn = tg['TargetGroupArn']
+#for tg in target_groups['TargetGroups']:
+#    if tg['TargetGroupName'] == tg_name:
+#        tg_arn = tg['TargetGroupArn']
 
         # Delete the target group using its ARN
-        elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
-        print(f"Target Group '{tg_name}' deleted.")
-        break
+#        elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
+#        print(f"Target Group '{tg_name}' deleted.")
+#        break
 
 ################## Step 6: Delete Route 53 record for the load balancer
-# Hosted zone ID and record details
+# Specify your Hosted Zone ID and the record name
 hosted_zone_id = 'Z04517273VCLIDX9UEQR7'
 record_name = 'test.clixx-della.com'
-record_type = 'A'  # Replace with the correct record type if necessary
 
-# Get the record details
-response = route53_client.list_resource_record_sets(
-    HostedZoneId=hosted_zone_id,
-    StartRecordName=record_name,
-    StartRecordType=record_type,
-    MaxItems="1"
-)
+try:
+    # Fetch the record sets
+    response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
 
-# Extract the current value from the response
-record_sets = response['ResourceRecordSets']
-if record_sets:
-    record_value = record_sets[0]['ResourceRecords'][0]['Value']
-    print(f"Current record value: {record_value}")
-else:
-    print(f"No record found for {record_name}")
+    # Find the record you want to delete
+    record_sets = response['ResourceRecordSets']
+    
+    # Check if the record exists and retrieve the value
+    record_value = None
+    for record in record_sets:
+        if record['Name'] == record_name + '.':  # Note the trailing dot
+            record_value = record['ResourceRecords'][0]['Value']
+            break
 
-response = route53_client.change_resource_record_sets(
-    HostedZoneId=hosted_zone_id,
-    ChangeBatch={
-        'Changes': [
-            {
-                'Action': 'DELETE',
-                'ResourceRecordSet': {
-                    'Name': record_name,
-                    'Type': record_type,
-                    'TTL': 300,
-                    'ResourceRecords': [
-                        {'Value': record_value}
-                    ]
-                }
+    if record_value:
+        # Now proceed to delete the record
+        print(f"Deleting record: {record_name} with value: {record_value}")
+        route53_client.change_resource_record_sets(
+            HostedZoneId=hosted_zone_id,
+            ChangeBatch={
+                'Changes': [
+                    {
+                        'Action': 'DELETE',
+                        'ResourceRecordSet': {
+                            'Name': record_name,
+                            'Type': 'A',  # Adjust if the record type is different
+                            'TTL': 300,  # Use the TTL that matches the existing record
+                            'ResourceRecords': [{'Value': record_value}],
+                        }
+                    }
+                ]
             }
-        ]
-    }
-)
-print(f"DNS record {record_name} deleted.")
+        )
+        print(f"Deleted record: {record_name}")
+    else:
+        print(f"Record {record_name} does not exist.")
+
+except Exception as e:
+    print(f"Error: {str(e)}")
 
 #################### Step 7: Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
