@@ -62,13 +62,13 @@ print(response)
 
 ##################### Step 3: Delete EFS file system
 # EFS name to delete
-efs_name = 'CLiXX-EFS' 
+#efs_name = 'CLiXX-EFS' 
 
 # Fetch all EFS file systems
-file_systems = efs_client.describe_file_systems()
+#file_systems = efs_client.describe_file_systems()
 
 # Loop through and find the EFS ID based on the Name tag
-for fs in file_systems['FileSystems']:
+#for fs in file_systems['FileSystems']:
     tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
     
     # Check if the Name tag matches
@@ -94,7 +94,7 @@ for lb in load_balancers['LoadBalancers']:
         lb_arn = lb['LoadBalancerArn']
         
         # Delete the load balancer using its ARN
-        elb_client.delete_load_balancer(LoadBalancerArn=lb_arn)
+        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
         print(f"Application Load Balancer '{lb_name}' deleted.")
         break
 
