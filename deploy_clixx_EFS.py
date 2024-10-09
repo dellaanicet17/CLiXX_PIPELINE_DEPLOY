@@ -74,7 +74,7 @@ file_system_id = efs_response['FileSystemId']
 # Step 2: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
-    GroupName='Test_Stack_Web_DMZ',
+    GroupName='Test1_Stack_Web_DMZ',
     VpcId=vpc_id,
     TagSpecifications=[
         {
@@ -82,7 +82,7 @@ security_group = ec2_resource.create_security_group(
             'Tags': [
                 {
                     'Key': 'Name', 
-                    'Value': 'Test_Stack_Web_DMZ'
+                    'Value': 'Test1_Stack_Web_DMZ'
                 },
             ]
         },
