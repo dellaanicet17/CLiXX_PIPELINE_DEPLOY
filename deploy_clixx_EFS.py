@@ -74,7 +74,7 @@ file_system_id = efs_response['FileSystemId']
 # Step 2: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
-    GroupName='Test1_Stack_Web_DMZ',
+    GroupName='Test_Stack_Web_DMZ',
     VpcId=vpc_id,
     TagSpecifications=[
         {
@@ -82,7 +82,7 @@ security_group = ec2_resource.create_security_group(
             'Tags': [
                 {
                     'Key': 'Name', 
-                    'Value': 'Test1_Stack_Web_DMZ'
+                    'Value': 'Test_Stack_Web_DMZ'
                 },
             ]
         },
@@ -209,9 +209,6 @@ route53_client.change_resource_record_sets(
 # Define user_data_script with dynamic variables
 user_data_script = f'''#!/bin/bash
 
-# Switch to root user
-sudo su -
-
 # Update packages and install necessary utilities
 yum update -y
 yum install -y nfs-utils 
@@ -276,8 +273,12 @@ sudo sed -i "s/username_here/$WordPress_DB_USER/" $WP_CONFIG_PATH
 sudo sed -i "s/password_here/$WordPress_DB_PASS/" $WP_CONFIG_PATH
 sudo sed -i "s/localhost/$WordPress_DB_HOST/" $WP_CONFIG_PATH
 
+# Add HTTPS enforcement to wp-config.php
+sudo sed -i "81i if (isset(\$_SERVER['HTTP_X_FORWARDED_PROTO']) && \$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {{ \$_SERVER['HTTPS'] = 'on'; }}" $WP_CONFIG_PATH
+
 # Allow WordPress to use Permalinks
 sudo sed -i '151s/None/All/' /etc/httpd/conf/httpd.conf
+
 
 # Grant file ownership of /var/www to apache user
 sudo chown -R apache /var/www
@@ -291,6 +292,12 @@ sudo systemctl restart httpd
 sudo service httpd restart
 sudo systemctl enable httpd 
 
+# Wait for the database to be up
+until mysqladmin ping -h $WordPress_DB_HOST -u $WordPress_DB_USER -p$WordPress_DB_PASS --silent; do
+    echo "Waiting for database to be available..."
+    sleep 10
+done
+
 # Check and update WordPress options
 existing_value=$(mysql -u ${{WordPress_DB_USER}} -p${{WordPress_DB_PASS}} -h ${{WordPress_DB_HOST}} -D ${{WordPress_DB_NAME}} -sse "SELECT COUNT(*) FROM wp_options WHERE (option_name = 'home' OR option_name = 'siteurl' OR option_name = 'ping_sites' OR option_name = 'open_shop_header_retina_logo') AND option_value = '${{RECORD_NAME}}';")
 
@@ -300,10 +307,10 @@ then
 else
     echo "Updating the options with the new record name value."
     mysql -u ${{WordPress_DB_USER}} -p${{WordPress_DB_PASS}} -h ${{WordPress_DB_HOST}} -D ${{WordPress_DB_NAME}} <<EOF
-    UPDATE wp_options SET option_value = "${{RECORD_NAME}}" WHERE option_name = "home";
-    UPDATE wp_options SET option_value = "${{RECORD_NAME}}" WHERE option_name = "siteurl";
-    UPDATE wp_options SET option_value = "${{RECORD_NAME}}" WHERE option_name = "ping_sites";
-    UPDATE wp_options SET option_value = "${{RECORD_NAME}}" WHERE option_name = "open_shop_header_retina_logo";
+    UPDATE wp_options SET option_value = "https://${{RECORD_NAME}}" WHERE option_name = "home";
+    UPDATE wp_options SET option_value = "https://${{RECORD_NAME}}" WHERE option_name = "siteurl";
+    UPDATE wp_options SET option_value = "https://${{RECORD_NAME}}" WHERE option_name = "ping_sites";
+    UPDATE wp_options SET option_value = "https://${{RECORD_NAME}}" WHERE option_name = "open_shop_header_retina_logo";
 EOF
     echo "Update queries executed successfully."
 fi
