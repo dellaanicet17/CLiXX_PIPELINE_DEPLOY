@@ -60,17 +60,6 @@ availability_zone = 'us-east-1a'
 hosted_zone_id = 'Z04517273VCLIDX9UEQR7'
 record_name = 'test.clixx-della.com'
 
-# Step 1: Create EFS file system
-efs_response = efs_client.create_file_system(
-    CreationToken='CLiXX-EFS',
-    PerformanceMode='generalPurpose',
-    Encrypted=False,
-    Tags=[
-        {'Key': 'Name', 'Value': 'CLiXX-EFS'}
-    ]
-)
-file_system_id = efs_response['FileSystemId']
-
 # Step 1: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
@@ -90,7 +79,6 @@ security_group = ec2_resource.create_security_group(
 )
 # Store the security group ID in a variable
 security_group_id = security_group.id
-
 # Authorize inbound rules (SSH, HTTP, HTTPS, MySQL/Aurora, NFS)
 inbound_rules = [
     {'CidrIp': '0.0.0.0/0', 'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22},    # SSH
@@ -152,7 +140,6 @@ efs_client.put_lifecycle_configuration(
     ]
 )
 
-
 # Step 4: Create Target Group
 target_group = elbv2_client.create_target_group(
     Name='CLiXX-TG',
@@ -183,7 +170,6 @@ load_balancer = elbv2_client.create_load_balancer(
     ]
 )
 load_balancer_arn = load_balancer['LoadBalancers'][0]['LoadBalancerArn']
-
 # Step 6: Create Listener for the Load Balancer (HTTP & HTTPS)
 # HTTP Listener
 elbv2_client.create_listener(
@@ -197,7 +183,6 @@ elbv2_client.create_listener(
         }
     ]
 )
-
 # HTTPS Listener (You will need an SSL certificate from ACM for this)
 elbv2_client.create_listener(
     LoadBalancerArn=load_balancer_arn,
@@ -216,7 +201,6 @@ elbv2_client.create_listener(
         }
     ]
 )
-
 
 # Step 7: Create Route 53 record for the load balancer
 route53_client.change_resource_record_sets(
