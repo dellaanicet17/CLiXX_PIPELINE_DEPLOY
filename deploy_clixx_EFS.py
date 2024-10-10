@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import boto3, botocore, base64
+import boto3, botocore, base64, time
 
 # Assume Role to interact with AWS resources
 sts_client = boto3.client('sts')
@@ -63,7 +63,7 @@ record_name = 'test.clixx-della.com'
 # Step 1: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
-    GroupName='Test_Stack_Web_DMZ',
+    GroupName='Test1_Stack_Web_DMZ',
     VpcId=vpc_id,
     TagSpecifications=[
         {
@@ -71,7 +71,7 @@ security_group = ec2_resource.create_security_group(
             'Tags': [
                 {
                     'Key': 'Name', 
-                    'Value': 'Test_Stack_Web_DMZ'
+                    'Value': 'Test1_Stack_Web_DMZ'
                 },
             ]
         },
@@ -121,6 +121,19 @@ efs_response = efs_client.create_file_system(
 file_system_id = efs_response['FileSystemId']
 # Create Mount Targets for each Availability Zone
 subnet_ids = ['subnet-0e9f4974af6be42ae', 'subnet-0ff64f61153db745d']  # Replace with your subnet IDs
+# Wait until the EFS file system is in 'available' state
+while True:
+    efs_info = efs_client.describe_file_systems(
+        FileSystemId=file_system_id
+    )
+    lifecycle_state = efs_info['FileSystems'][0]['LifeCycleState']
+    if lifecycle_state == 'available':
+        print("EFS is now available.")
+        break
+    else:
+        print(f"EFS is in '{lifecycle_state}' state. Waiting for it to become available...")
+        time.sleep(10)  # Wait for 10 seconds before checking again
+# After ensuring the file system is available, create the mount target
 for subnet_id in subnet_ids:
     mount_target_response = efs_client.create_mount_target(
         FileSystemId=file_system_id,
