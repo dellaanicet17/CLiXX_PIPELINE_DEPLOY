@@ -166,7 +166,7 @@ target_group_arn = target_group['TargetGroups'][0]['TargetGroupArn']
 # Step 5: Create Application Load Balancer
 load_balancer = elbv2_client.create_load_balancer(
     Name='CLiXX-LB',
-    Subnets=[subnet_id, subnet_id2],
+    Subnets=['subnet-0e9f4974af6be42ae', 'subnet-0ff64f61153db745d'],
     SecurityGroups=[security_group_id],
     Scheme='internet-facing',
     Type='application',
