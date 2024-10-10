@@ -63,7 +63,7 @@ record_name = 'test.clixx-della.com'
 # Step 1: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
-    GroupName='Test1_Stack_Web_DMZ',
+    GroupName='Test_Stack_Web_DMZ',
     VpcId=vpc_id,
     TagSpecifications=[
         {
@@ -71,7 +71,7 @@ security_group = ec2_resource.create_security_group(
             'Tags': [
                 {
                     'Key': 'Name', 
-                    'Value': 'Test1_Stack_Web_DMZ'
+                    'Value': 'Test_Stack_Web_DMZ'
                 },
             ]
         },
@@ -248,6 +248,24 @@ yum install -y nfs-utils
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
 AVAILABILITY_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/placement/availability-zone")
 REGION=${{AVAILABILITY_ZONE:0:-1}}
+
+# Create the EFS file system and capture the FileSystemId
+file_system_id="{file_system_id}"  # Assume this is set earlier in the script
+efs_response=$(aws efs create-file-system --creation-token "CLiXX-EFS")
+file_system_id=$(echo $efs_response | jq -r '.FileSystemId')
+
+# Wait until the EFS is available
+echo "Waiting for EFS to be available..."
+while true; do
+    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text)
+    echo "Current EFS status: $status"
+    if [ "$status" == "available" ]; then
+        echo "EFS is available!"
+        break
+    fi
+    echo "EFS not available yet. Waiting..."
+    sleep 10  # Wait for 10 seconds before checking again
+done
 
 # Set variables
 MOUNT_POINT=/var/www/html
