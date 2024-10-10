@@ -145,10 +145,10 @@ efs_client.put_lifecycle_configuration(
     FileSystemId=file_system_id,
     LifecyclePolicies=[
         {
-            'TransitionToIA': 'AFTER_30_DAYS'  # Archive files to Infrequent Access after 30 days
+            'TransitionToIA': 'AFTER_30_DAYS'  # Archive files after 30 days
         },
         {
-            'TransitionToPrimaryStorageClass': 'ON_FIRST_ACCESS'  # Transition back to Standard on first access
+            'TransitionToPrimaryStorageClass': 'AFTER_1_ACCESS'  # Move back on first access
         }
     ]
 )
