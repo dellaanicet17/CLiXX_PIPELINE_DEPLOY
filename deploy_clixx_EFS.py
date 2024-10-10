@@ -71,7 +71,7 @@ efs_response = efs_client.create_file_system(
 )
 file_system_id = efs_response['FileSystemId']
 
-# Step 2: Create Security group
+# Step 1: Create Security group
 security_group = ec2_resource.create_security_group(
     Description='Allow inbound traffic for various services',
     GroupName='Test_Stack_Web_DMZ',
@@ -109,7 +109,7 @@ for rule in inbound_rules:
 # Print the created security group ID
 print(f"Security Group {security_group_id} with inbound rules for SSH, HTTP, HTTPS, NFS, MySQL/Aurora has been created.")
 
-# Step 3: Restore DB Instance from Snapshot
+# Step 2: Restore DB Instance from Snapshot
 rds_client.restore_db_instance_from_db_snapshot(
     DBInstanceIdentifier=db_instance_identifier,
     DBSnapshotIdentifier=db_snapshot_identifier,
@@ -119,6 +119,39 @@ rds_client.restore_db_instance_from_db_snapshot(
     MultiAZ=False,
     PubliclyAccessible=True
 )
+
+# Step 3: Create EFS file system
+efs_response = efs_client.create_file_system(
+    CreationToken='CLiXX-EFS',
+    PerformanceMode='generalPurpose',  # You can also use 'maxIO' based on your requirements
+    Encrypted=False,
+    ThroughputMode='bursting',  # Other options: 'provisioned'
+    Tags=[
+        {'Key': 'Name', 'Value': 'CLiXX-EFS'}
+    ]
+)
+file_system_id = efs_response['FileSystemId']
+# Create Mount Targets for each Availability Zone
+subnet_ids = ['subnet-0e9f4974af6be42ae', 'subnet-0ff64f61153db745d']  # Replace with your subnet IDs
+for subnet_id in subnet_ids:
+    mount_target_response = efs_client.create_mount_target(
+        FileSystemId=file_system_id,
+        SubnetId=subnet_id,
+        SecurityGroups=[security_group_id]
+    )
+# Attach Lifecycle Policy (optional)
+efs_client.put_lifecycle_configuration(
+    FileSystemId=file_system_id,
+    LifecyclePolicies=[
+        {
+            'TransitionToIA': 'AFTER_30_DAYS'  # Archive files to Infrequent Access after 30 days
+        },
+        {
+            'TransitionToPrimaryStorageClass': 'ON_FIRST_ACCESS'  # Transition back to Standard on first access
+        }
+    ]
+)
+
 
 # Step 4: Create Target Group
 target_group = elbv2_client.create_target_group(
