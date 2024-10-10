@@ -46,74 +46,74 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_session_token=credentials['SessionToken'])
 
 ##################### Step 1: Delete the DB instance
-#response = rds_client.delete_db_instance(
-#    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
-#    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
-#   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
-#)
-#print("DB Instance deletion initiated:", response)
+response = rds_client.delete_db_instance(
+    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
+    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
+   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
+)
+print("DB Instance deletion initiated:", response)
 
 ##################### Step 2: Delete security Group
-#response = ec2_client.delete_security_group(
-#    #GroupId='string',
-#    GroupName='Test_Stack_Web_DMZ'
-#    )
-#print(response)
+response = ec2_client.delete_security_group(
+    GroupId='string',
+    GroupName='Test_Stack_Web_DMZ'
+    )
+print(response)
 
 ################### Step 3: Delete Application Load Balancer
 # Name of the load balancer to delete
-#lb_name = 'CLiXX-LB'
+lb_name = 'CLiXX-LB'
 
 # Describe all load balancers to find the one with the specified name
-#load_balancers = elbv2_client.describe_load_balancers()
+load_balancers = elbv2_client.describe_load_balancers()
 
 # Loop through load balancers and find the one with the matching name
-#for lb in load_balancers['LoadBalancers']:
-#    if lb['LoadBalancerName'] == lb_name:
-#        lb_arn = lb['LoadBalancerArn']
+for lb in load_balancers['LoadBalancers']:
+    if lb['LoadBalancerName'] == lb_name:
+        lb_arn = lb['LoadBalancerArn']
         
         # Delete the load balancer using its ARN
-#        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
-#        print(f"Application Load Balancer '{lb_name}' deleted.")
-#        break
+        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
+        print(f"Application Load Balancer '{lb_name}' deleted.")
+        break
 
 ##################### Step 4: Delete EFS file system
 # EFS name to delete
-#efs_name = 'CLiXX-EFS' 
+efs_name = 'CLiXX-EFS' 
 
 # Fetch all EFS file systems
-#file_systems = efs_client.describe_file_systems()
+file_systems = efs_client.describe_file_systems()
 
 # Loop through and find the EFS ID based on the Name tag
-#for fs in file_systems['FileSystems']:
-#    tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
-#    
-#   # Check if the Name tag matches
-#    for tag in tags['Tags']:
-#        if tag['Key'] == 'Name' and tag['Value'] == efs_name:
-#           file_system_id = fs['FileSystemId']
+for fs in file_systems['FileSystems']:
+    tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
+    
+   # Check if the Name tag matches
+    for tag in tags['Tags']:
+        if tag['Key'] == 'Name' and tag['Value'] == efs_name:
+           file_system_id = fs['FileSystemId']
             
             # Delete the EFS
-#            efs_client.delete_file_system(FileSystemId=file_system_id)
-#            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
-#            break
+            efs_client.delete_file_system(FileSystemId=file_system_id)
+            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
+            break
 
 #################### Step 5: Delete Target Group
 # Name of the target group to delete
-#tg_name = 'CLiXX-TG'
+tg_name = 'CLiXX-TG'
 
 # Describe all target groups to find the one with the specified name
-#target_groups = elbv2_client.describe_target_groups()
+target_groups = elbv2_client.describe_target_groups()
 
 # Loop through target groups and find the one with the matching name
-#for tg in target_groups['TargetGroups']:
-#    if tg['TargetGroupName'] == tg_name:
-#        tg_arn = tg['TargetGroupArn']
+for tg in target_groups['TargetGroups']:
+    if tg['TargetGroupName'] == tg_name:
+        tg_arn = tg['TargetGroupArn']
 
         # Delete the target group using its ARN
-#        elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
-#        print(f"Target Group '{tg_name}' deleted.")
-#        break
+        elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
+        print(f"Target Group '{tg_name}' deleted.")
+        break
 
 ################## Step 6: Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
