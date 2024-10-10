@@ -91,7 +91,7 @@ for fs in file_systems['FileSystems']:
    # Check if the Name tag matches
     for tag in tags['Tags']:
         if tag['Key'] == 'Name' and tag['Value'] == efs_name:
-           file_system_id = fs['FileSystemId']
+            file_system_id = fs['FileSystemId']
             
             # Delete the EFS
             efs_client.delete_file_system(FileSystemId=file_system_id)
