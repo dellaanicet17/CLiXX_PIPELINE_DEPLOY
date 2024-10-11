@@ -65,18 +65,19 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 lb_name = 'CLiXX-LB'
 
 # Describe all load balancers to find the one with the specified name
-load_balancers = elbv2_client.describe_load_balancers()
+#load_balancers = elbv2_client.describe_load_balancers()
 
 # Loop through load balancers and find the one with the matching name
-for lb in load_balancers['LoadBalancers']:
-    if lb['LoadBalancerName'] == lb_name:
-        lb_arn = lb['LoadBalancerArn']
+#for lb in load_balancers['LoadBalancers']:
+#    if lb['LoadBalancerName'] == lb_name:
+#        lb_arn = lb['LoadBalancerArn']
         
         # Delete the load balancer using its ARN
-        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
-        print(f"Application Load Balancer '{lb_name}' deleted.")
-        break
+#        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
+#        print(f"Application Load Balancer '{lb_name}' deleted.")
+#        break
 
+# Delete mount target befor deleting efs file
 ##################### Step 4: Delete EFS file system
 # EFS name to delete
 efs_name = 'CLiXX-EFS' 
