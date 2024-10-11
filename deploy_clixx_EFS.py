@@ -238,6 +238,7 @@ route53_client.change_resource_record_sets(
 )
 
 # Define user_data_script with dynamic variables
+MOUNT_POINT = "/var/www/html"
 user_data_script = f'''#!/bin/bash
 
 # Update packages and install necessary utilities
@@ -276,7 +277,7 @@ if [ "$elapsed" -ge "$timeout" ]; then
 fi
 
 # Set variables
-MOUNT_POINT=/var/www/html
+#MOUNT_POINT=/var/www/html
 
 # Create and set permissions for the mount point
 mkdir -p {MOUNT_POINT}
