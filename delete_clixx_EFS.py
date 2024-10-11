@@ -54,11 +54,11 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 #print("DB Instance deletion initiated:", response)
 
 ##################### Step 2: Delete security Group
-response = ec2_client.delete_security_group(
-    GroupId='string',
-    GroupName='Test1_Stack_Web_DMZ'
-   )
-print(response)
+#response = ec2_client.delete_security_group(
+#    GroupId='string',
+#    GroupName='Test1_Stack_Web_DMZ'
+#   )
+#print(response)
 
 ################### Step 3: Delete Application Load Balancer
 # Name of the load balancer to delete
