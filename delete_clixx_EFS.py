@@ -45,61 +45,92 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_secret_access_key=credentials['SecretAccessKey'], 
                                   aws_session_token=credentials['SessionToken'])
 
-##################### Step 1: Delete the DB instance
-#response = rds_client.delete_db_instance(
-#    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
-#    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
-#   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
-#)
-#print("DB Instance deletion initiated:", response)
+##################### Delete the DB instance
+response = rds_client.delete_db_instance(
+    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
+    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
+   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
+)
+print("DB Instance deletion initiated:", response)
 
-##################### Step 2: Delete security Group
-#response = ec2_client.delete_security_group(
-#    GroupId='string',
-#    GroupName='Test1_Stack_Web_DMZ'
-#   )
-#print(response)
-
-################### Step 3: Delete Application Load Balancer
+################### Delete Application Load Balancer
 # Name of the load balancer to delete
 lb_name = 'CLiXX-LB'
 
 # Describe all load balancers to find the one with the specified name
-#load_balancers = elbv2_client.describe_load_balancers()
+load_balancers = elbv2_client.describe_load_balancers()
 
 # Loop through load balancers and find the one with the matching name
-#for lb in load_balancers['LoadBalancers']:
-#    if lb['LoadBalancerName'] == lb_name:
-#        lb_arn = lb['LoadBalancerArn']
+for lb in load_balancers['LoadBalancers']:
+    if lb['LoadBalancerName'] == lb_name:
+        lb_arn = lb['LoadBalancerArn']
         
         # Delete the load balancer using its ARN
-#        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
-#        print(f"Application Load Balancer '{lb_name}' deleted.")
-#        break
+        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
+        print(f"Application Load Balancer '{lb_name}' deleted.")
+        break
 
-# Delete mount target befor deleting efs file
-##################### Step 4: Delete EFS file system
+##################### Delete mount target befor deleting efs file
+# Specify the EFS name
+efs_name = 'CLiXX-EFS'
+# Describe all file systems
+fs_info = efs_client.describe_file_systems()
+file_system_id = None
+# Find the file system with the specified name
+for fs in fs_info['FileSystems']:
+    tags = efs_client.list_tags_for_resource(ResourceId=fs['FileSystemId'])['Tags']
+    if any(tag['Key'] == 'Name' and tag['Value'] == efs_name for tag in tags):
+        file_system_id = fs['FileSystemId']
+        print(f"Found EFS with File System ID: {file_system_id}")
+        break
+
+if file_system_id is None:
+    print(f"No EFS found with the name '{efs_name}'.")
+else:
+    # Retrieve all mount targets for the specified EFS
+    mount_targets_info = efs_client.describe_mount_targets(FileSystemId=file_system_id)
+    mount_target_ids = [mount['MountTargetId'] for mount in mount_targets_info['MountTargets']]
+
+    # Delete each mount target
+    for mount_target_id in mount_target_ids:
+        efs_client.delete_mount_target(MountTargetId=mount_target_id)
+        print(f"Deleted mount target: {mount_target_id}")
+
+        # Wait for the mount target to be deleted
+        while True:
+            time.sleep(5)
+            mount_target_info = efs_client.describe_mount_targets(FileSystemId=file_system_id)
+
+            if not any(mount['MountTargetId'] == mount_target_id for mount in mount_target_info['MountTargets']):
+                print(f"Mount target {mount_target_id} is deleted.")
+                break
+
+    # Delete the EFS file system after all mount targets are deleted
+    efs_client.delete_file_system(FileSystemId=file_system_id)
+    print(f"Deleted EFS with File System ID: {file_system_id}")
+
+##################### Delete EFS file system
 # EFS name to delete
-efs_name = 'CLiXX-EFS' 
+#efs_name = 'CLiXX-EFS' 
 
 # Fetch all EFS file systems
-file_systems = efs_client.describe_file_systems()
+#file_systems = efs_client.describe_file_systems()
 
 # Loop through and find the EFS ID based on the Name tag
-for fs in file_systems['FileSystems']:
-    tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
+#for fs in file_systems['FileSystems']:
+#    tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
     
    # Check if the Name tag matches
-    for tag in tags['Tags']:
-        if tag['Key'] == 'Name' and tag['Value'] == efs_name:
-            file_system_id = fs['FileSystemId']
+#    for tag in tags['Tags']:
+#        if tag['Key'] == 'Name' and tag['Value'] == efs_name:
+#            file_system_id = fs['FileSystemId']
             
             # Delete the EFS
-            efs_client.delete_file_system(FileSystemId=file_system_id)
-            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
-            break
+#            efs_client.delete_file_system(FileSystemId=file_system_id)
+#            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
+#            break
 
-#################### Step 5: Delete Target Group
+#################### Delete Target Group
 # Name of the target group to delete
 tg_name = 'CLiXX-TG'
 
@@ -116,7 +147,7 @@ for tg in target_groups['TargetGroups']:
         print(f"Target Group '{tg_name}' deleted.")
         break
 
-################## Step 6: Delete Route 53 record for the load balancer
+################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
 hosted_zone_id = 'Z04517273VCLIDX9UEQR7'
 record_name = 'test.clixx-della.com'
@@ -161,7 +192,7 @@ try:
 except Exception as e:
     print(f"Error: {str(e)}")
 
-#################### Step 7: Delete Auto Scaling Group 
+#################### Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
 autoscaling_group_name = 'CLiXX-ASG'
 
@@ -172,7 +203,7 @@ response = autoscaling_client.delete_auto_scaling_group(
 )
 print("Auto Scaling Group deleted:", response)
 
-#################### Step 8: Delete Launch Template
+#################### Delete Launch Template
 # Specify the Launch Template Name
 launch_template_name = 'CLiXX-LT'
 
@@ -189,3 +220,11 @@ delete_response = ec2_client.delete_launch_template(
     LaunchTemplateId=launch_template_id
 )
 print("Launch Template deleted:", delete_response)
+
+##################### Delete security Group
+response = ec2_client.delete_security_group(
+    GroupId='string',
+    GroupName='Test_Stack_Web_DMZ'
+   )
+print(response)
+
