@@ -239,56 +239,52 @@ route53_client.change_resource_record_sets(
 )
 
 # Define user_data_script with dynamic variables
-MOUNT_POINT = "/var/www/html"
+#MOUNT_POINT = "/var/www/html"
 user_data_script = f'''#!/bin/bash
 
 # Update packages and install necessary utilities
 yum update -y
-yum install -y nfs-utils aws-cli jq
+yum install -y nfs-utils jq
 
-# Fetch the session token and region information for metadata
+# Fetch the session token and region information from metadata
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
 AVAILABILITY_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/placement/availability-zone")
 REGION=${{AVAILABILITY_ZONE:0:-1}}
 
 # Create the EFS file system and capture the FileSystemId
-file_system_id="{file_system_id}"  # Assume this is set earlier in the script
-efs_response=$(aws efs create-file-system --creation-token "CLiXX-EFS")
+efs_response=$(aws efs create-file-system --creation-token "CLiXX-EFS" --region $REGION)
 file_system_id=$(echo $efs_response | jq -r '.FileSystemId')
 
-# Wait until the EFS is available with a timeout
+# Verify if FileSystemId was successfully retrieved
+if [ -z "$file_system_id" ]; then
+    echo "Error: Unable to retrieve FileSystemId"
+    exit 1
+fi
+
+# Wait until the EFS is available
 echo "Waiting for EFS to be available..."
-timeout=600  # 10 minutes
-elapsed=0
-while [ "$elapsed" -lt "$timeout" ]; do
-    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text)
+while true; do
+    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region $REGION)
     echo "Current EFS status: $status"
     if [ "$status" == "available" ]; then
         echo "EFS is available!"
         break
     fi
     echo "EFS not available yet. Waiting..."
-    sleep 30  # Wait for 30 seconds before checking again
-    elapsed=$((elapsed + 30))
+    sleep 10  # Wait for 10 seconds before checking again
 done
 
-if [ "$elapsed" -ge "$timeout" ]; then
-    echo "EFS did not become available in time."
-    exit 1
-fi
-
 # Set variables
-#MOUNT_POINT=/var/www/html
+MOUNT_POINT=/var/www/html
 
 # Create and set permissions for the mount point
-mkdir -p {MOUNT_POINT}
-chown ec2-user:ec2-user {MOUNT_POINT}
+mkdir -p ${{MOUNT_POINT}}
+chown ec2-user:ec2-user ${{MOUNT_POINT}}
 
 # Mount the EFS file system
-echo "{file_system_id}.efs.${{REGION}}.amazonaws.com:/ {MOUNT_POINT} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
+echo "{file_system_id}.efs.${{REGION}}.amazonaws.com:/ ${{MOUNT_POINT}} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
 mount -a -t nfs4
-chmod -R 755 {MOUNT_POINT}
-
+chmod -R 755 /var/www/html
 
 # Switch back to ec2-user
 sudo su - ec2-user
