@@ -382,7 +382,10 @@ launch_template = ec2_client.create_launch_template(
         'InstanceType': instance_type,
         'KeyName': key_pair_name,
         'SecurityGroupIds': [security_group_id],
-        'UserData': user_data_base64
+        'UserData': user_data_base64,
+        'IamInstanceProfile': {
+            'Name': 'EFS_operations'  # Replace with your IAM role name
+        }
     }
 )
 launch_template_id = launch_template['LaunchTemplate']['LaunchTemplateId']
