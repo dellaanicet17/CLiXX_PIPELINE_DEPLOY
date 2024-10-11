@@ -242,7 +242,7 @@ user_data_script = f'''#!/bin/bash
 
 # Update packages and install necessary utilities
 yum update -y
-yum install -y nfs-utils 
+yum install -y nfs-utils aws-cli jq
 
 # Fetch the session token and region information for metadata
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
@@ -254,9 +254,11 @@ file_system_id="{file_system_id}"  # Assume this is set earlier in the script
 efs_response=$(aws efs create-file-system --creation-token "CLiXX-EFS")
 file_system_id=$(echo $efs_response | jq -r '.FileSystemId')
 
-# Wait until the EFS is available
+# Wait until the EFS is available with a timeout
 echo "Waiting for EFS to be available..."
-while true; do
+timeout=600  # 10 minutes
+elapsed=0
+while [ "$elapsed" -lt "$timeout" ]; do
     status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text)
     echo "Current EFS status: $status"
     if [ "$status" == "available" ]; then
@@ -264,20 +266,27 @@ while true; do
         break
     fi
     echo "EFS not available yet. Waiting..."
-    sleep 10  # Wait for 10 seconds before checking again
+    sleep 30  # Wait for 30 seconds before checking again
+    elapsed=$((elapsed + 30))
 done
+
+if [ "$elapsed" -ge "$timeout" ]; then
+    echo "EFS did not become available in time."
+    exit 1
+fi
 
 # Set variables
 MOUNT_POINT=/var/www/html
 
 # Create and set permissions for the mount point
-mkdir -p ${{MOUNT_POINT}}
-chown ec2-user:ec2-user ${{MOUNT_POINT}}
+mkdir -p {MOUNT_POINT}
+chown ec2-user:ec2-user {MOUNT_POINT}
 
 # Mount the EFS file system
-echo "{file_system_id}.efs.${{REGION}}.amazonaws.com:/ ${{MOUNT_POINT}} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
+echo "{file_system_id}.efs.${{REGION}}.amazonaws.com:/ {MOUNT_POINT} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
 mount -a -t nfs4
-chmod -R 755 /var/www/html
+chmod -R 755 {MOUNT_POINT}
+
 
 # Switch back to ec2-user
 sudo su - ec2-user
