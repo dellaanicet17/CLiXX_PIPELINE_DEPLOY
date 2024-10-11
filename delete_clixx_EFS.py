@@ -50,7 +50,7 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
 #    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
 #    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
 #   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
-)
+#)
 #print("DB Instance deletion initiated:", response)
 
 ################### Delete Application Load Balancer
