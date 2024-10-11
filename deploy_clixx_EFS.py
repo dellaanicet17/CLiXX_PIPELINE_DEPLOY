@@ -244,18 +244,16 @@ user_data_script = f'''#!/bin/bash
 
 # Update packages and install necessary utilities
 yum update -y
-yum install -y nfs-utils jq
+yum install -y nfs-utils 
 
-# Fetch the session token and region information from metadata
+# Fetch the session token and region information for metadata
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
 AVAILABILITY_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/placement/availability-zone")
 REGION=${{AVAILABILITY_ZONE:0:-1}}
 
-# Create the EFS file system and capture the FileSystemId
-efs_response=$(aws efs create-file-system --creation-token "CLiXX-EFS" --region $REGION)
-file_system_id=$(echo $efs_response | jq -r '.FileSystemId')
+# Fetch the FileSystemId based on the EFS name
+file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name']].FileSystemId" --filters "Name=tag:Name,Values=CLiXX-EFS" --region ${{REGION}} --output text)
 
-# Verify if FileSystemId was successfully retrieved
 if [ -z "$file_system_id" ]; then
     echo "Error: Unable to retrieve FileSystemId"
     exit 1
@@ -264,7 +262,7 @@ fi
 # Wait until the EFS is available
 echo "Waiting for EFS to be available..."
 while true; do
-    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region $REGION)
+    status=$(aws efs describe-file-systems --file-system-id $file_system_id --region ${{REGION}} --query "FileSystems[0].LifeCycleState" --output text)
     echo "Current EFS status: $status"
     if [ "$status" == "available" ]; then
         echo "EFS is available!"
@@ -282,7 +280,7 @@ mkdir -p ${{MOUNT_POINT}}
 chown ec2-user:ec2-user ${{MOUNT_POINT}}
 
 # Mount the EFS file system
-echo "{file_system_id}.efs.${{REGION}}.amazonaws.com:/ ${{MOUNT_POINT}} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
+echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ ${{MOUNT_POINT}} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
 mount -a -t nfs4
 chmod -R 755 /var/www/html
 
