@@ -252,7 +252,7 @@ AVAILABILITY_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.25
 REGION=${{AVAILABILITY_ZONE:0:-1}}
 
 # Fetch the FileSystemId based on the EFS name
-file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name']].FileSystemId" --filters "Name=tag:Name,Values=CLiXX-EFS" --region ${{REGION}} --output text)
+file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name' && Value=='CLiXX-EFS']].FileSystemId" --output text --region ${{REGION}})
 
 if [ -z "$file_system_id" ]; then
     echo "Error: Unable to retrieve FileSystemId"
@@ -262,7 +262,7 @@ fi
 # Wait until the EFS is available
 echo "Waiting for EFS to be available..."
 while true; do
-    status=$(aws efs describe-file-systems --file-system-id $file_system_id --region ${{REGION}} --query "FileSystems[0].LifeCycleState" --output text)
+    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region ${{REGION}})
     echo "Current EFS status: $status"
     if [ "$status" == "available" ]; then
         echo "EFS is available!"
