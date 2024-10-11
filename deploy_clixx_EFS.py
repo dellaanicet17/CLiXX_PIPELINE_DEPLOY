@@ -280,7 +280,10 @@ mkdir -p ${{MOUNT_POINT}}
 chown ec2-user:ec2-user ${{MOUNT_POINT}}
 
 # Mount the EFS file system
-echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ ${{MOUNT_POINT}} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
+sudo yum install -y nfs-utils
+sudo service nfs start
+
+echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ $MOUNT_POINT nfs4 defaults 0 0" >> /etc/fstab
 mount -a -t nfs4
 chmod -R 755 /var/www/html
 
@@ -409,4 +412,5 @@ autoscaling_client.create_auto_scaling_group(
         }
     ]
 )
+
 
