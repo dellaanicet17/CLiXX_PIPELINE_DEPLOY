@@ -153,6 +153,7 @@ efs_client.put_lifecycle_configuration(
     ]
 )
 
+
 # Step 4: Create Target Group
 target_group = elbv2_client.create_target_group(
     Name='CLiXX-TG',
