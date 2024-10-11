@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import boto3, botocore, base64
+import boto3, botocore, base64, time
 
 # Assume Role to interact with AWS resources
 sts_client = boto3.client('sts')
@@ -46,29 +46,29 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_session_token=credentials['SessionToken'])
 
 ##################### Delete the DB instance
-response = rds_client.delete_db_instance(
-    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
-    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
-   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
+#response = rds_client.delete_db_instance(
+#    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
+#    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
+#   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
 )
-print("DB Instance deletion initiated:", response)
+#print("DB Instance deletion initiated:", response)
 
 ################### Delete Application Load Balancer
 # Name of the load balancer to delete
 lb_name = 'CLiXX-LB'
 
 # Describe all load balancers to find the one with the specified name
-load_balancers = elbv2_client.describe_load_balancers()
+#load_balancers = elbv2_client.describe_load_balancers()
 
 # Loop through load balancers and find the one with the matching name
-for lb in load_balancers['LoadBalancers']:
-    if lb['LoadBalancerName'] == lb_name:
-        lb_arn = lb['LoadBalancerArn']
+#for lb in load_balancers['LoadBalancers']:
+#    if lb['LoadBalancerName'] == lb_name:
+#        lb_arn = lb['LoadBalancerArn']
         
         # Delete the load balancer using its ARN
-        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
-        print(f"Application Load Balancer '{lb_name}' deleted.")
-        break
+#        elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
+#        print(f"Application Load Balancer '{lb_name}' deleted.")
+#        break
 
 ##################### Delete mount target befor deleting efs file
 # Specify the EFS name
