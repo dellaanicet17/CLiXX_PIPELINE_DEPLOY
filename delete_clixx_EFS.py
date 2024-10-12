@@ -109,27 +109,6 @@ else:
     efs_client.delete_file_system(FileSystemId=file_system_id)
     print(f"Deleted EFS with File System ID: {file_system_id}")
 
-##################### Delete EFS file system
-# EFS name to delete
-#efs_name = 'CLiXX-EFS' 
-
-# Fetch all EFS file systems
-#file_systems = efs_client.describe_file_systems()
-
-# Loop through and find the EFS ID based on the Name tag
-#for fs in file_systems['FileSystems']:
-#    tags = efs_client.describe_tags(FileSystemId=fs['FileSystemId'])
-    
-   # Check if the Name tag matches
-#    for tag in tags['Tags']:
-#        if tag['Key'] == 'Name' and tag['Value'] == efs_name:
-#            file_system_id = fs['FileSystemId']
-            
-            # Delete the EFS
-#            efs_client.delete_file_system(FileSystemId=file_system_id)
-#            print(f"EFS '{efs_name}' with ID '{file_system_id}' deleted.")
-#            break
-
 #################### Delete Target Group
 # Name of the target group to delete
 tg_name = 'CLiXX-TG'
@@ -203,6 +182,16 @@ response = autoscaling_client.delete_auto_scaling_group(
 )
 print("Auto Scaling Group deleted:", response)
 
+# Check if the Auto Scaling Group is deleted
+while True:
+    time.sleep(120)  # Wait for a few seconds
+    asg_status = autoscaling_client.describe_auto_scaling_groups(
+        AutoScalingGroupNames=[autoscaling_group_name]
+    )
+    if not asg_status['AutoScalingGroups']:
+        print(f"Auto Scaling Group '{autoscaling_group_name}' deleted successfully.")
+        break
+
 #################### Delete Launch Template
 # Specify the Launch Template Name
 launch_template_name = 'CLiXX-LT'
@@ -221,10 +210,26 @@ delete_response = ec2_client.delete_launch_template(
 )
 print("Launch Template deleted:", delete_response)
 
-##################### Delete security Group
-response = ec2_client.delete_security_group(
-    GroupId='string',
-    GroupName='Test_Stack_Web_DMZ'
-   )
-print(response)
+#################### Fetch and Delete Security Group
+# Fetch security group by name
+sg_name = 'Test_Stack_Web_DMZ'  # Replace with your security group name
+
+# Describe all security groups
+security_groups = ec2_client.describe_security_groups(
+    Filters=[{'Name': 'group-name', 'Values': [sg_name]}]
+)
+
+# Fetch the security group ID
+if security_groups['SecurityGroups']:
+    security_group_id = security_groups['SecurityGroups'][0]['GroupId']
+    print(f"Found Security Group with ID: {security_group_id}")
+    
+    # Check if the Auto Scaling Group is deleted before proceeding
+    if 'AutoScalingGroupName' in locals() and not asg_status['AutoScalingGroups']:
+        response = ec2_client.delete_security_group(
+            GroupId=security_group_id
+        )
+        print("Security Group deleted:", response)
+else:
+    print(f"Security Group '{sg_name}' not found.")
 
