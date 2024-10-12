@@ -265,11 +265,14 @@ if [ -z "$file_system_id" ]; then
     exit 1
 fi
 
-# Wait until the EFS is available
+# Wait until the EFS mount target is available
 while true; do
-    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region ${{REGION}})
+    status=$(aws efs describe-mount-targets --file-system-id $file_system_id --query "MountTargets[0].LifeCycleState" --output text --region ${{REGION}})
     if [ "$status" == "available" ]; then
+        echo "Mount target is available, proceeding to mount..."
         break
+    else
+        echo "Mount target not available yet, retrying in 10 seconds..."
     fi
     sleep 10
 done
@@ -282,34 +285,33 @@ MOUNT_POINT={mount_point}
 mkdir -p $MOUNT_POINT
 chown ec2-user:ec2-user $MOUNT_POINT
 
-# Add EFS to fstab and attempt to mount
+# Attempt to mount EFS
 echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ $MOUNT_POINT nfs4 defaults,_netdev 0 0" >> /etc/fstab
 mount -a -t nfs4 || {{
-    echo "Mount failed, retrying..."
+    echo "Mount failed, retrying after network restart..."
     sudo service network restart
     mount -a -t nfs4
 }}
 
-# Check if mount was successful
+# Check if the mount was successful
 if ! mount | grep -q $MOUNT_POINT; then
-    echo "Error: EFS mount failed"
-    exit 1
+    echo "Error: EFS mount failed. Continuing with the rest of the script."
 else
-    echo "EFS successfully mounted"
+    echo "EFS successfully mounted."
 fi
 
 chmod -R 755 $MOUNT_POINT
 
-
 # Switch back to ec2-user
 sudo su - ec2-user
 
-# Variables - Update these as needed
+# Proceed with the rest of the CLiXX setup
+# Variables for WordPress Setup
 CLiXX_GIT_REPO_URL="https://github.com/stackitgit/CliXX_Retail_Repository.git"
-WordPress_DB_NAME="wordpressdb" 
+WordPress_DB_NAME="wordpressdb"
 WordPress_DB_USER="wordpressuser"
-WordPress_DB_PASS="W3lcome123" 
-WordPress_DB_HOST="wordpressdbclixx.cj0yi4ywm61r.us-east-1.rds.amazonaws.com" 
+WordPress_DB_PASS="W3lcome123"
+WordPress_DB_HOST="wordpressdbclixx.cj0yi4ywm61r.us-east-1.rds.amazonaws.com"
 RECORD_NAME="{record_name}"
 WP_CONFIG_PATH="/var/www/html/wp-config.php"
 
@@ -350,7 +352,6 @@ sudo sed -i "81i if (isset(\$_SERVER['HTTP_X_FORWARDED_PROTO']) && \$_SERVER['HT
 # Allow WordPress to use Permalinks
 sudo sed -i '151s/None/All/' /etc/httpd/conf/httpd.conf
 
-
 # Grant file ownership of /var/www to apache user
 sudo chown -R apache /var/www
 sudo chgrp -R apache /var/www
@@ -361,7 +362,7 @@ sudo find /var/www -type f -exec sudo chmod 0664 {{}} \;
 # Restart Apache
 sudo systemctl restart httpd
 sudo service httpd restart
-sudo systemctl enable httpd 
+sudo systemctl enable httpd
 
 # Wait for the database to be up
 until mysqladmin ping -h $WordPress_DB_HOST -u $WordPress_DB_USER -p$WordPress_DB_PASS --silent; do
