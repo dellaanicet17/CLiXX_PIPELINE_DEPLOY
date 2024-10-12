@@ -239,7 +239,8 @@ route53_client.change_resource_record_sets(
 )
 
 # Define user_data_script with dynamic variables
-#MOUNT_POINT = "/var/www/html"
+efs_name = "CLiXX-EFS"
+mount_point = "/var/www/html"
 user_data_script = f'''#!/bin/bash
 
 # Switch to root user
@@ -251,72 +252,53 @@ yum install -y nfs-utils
 
 # Fetch the session token and region information for metadata
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-AVAILABILITY_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: ${{TOKEN}}" "http://169.254.169.254/latest/meta-data/placement/availability-zone")
+AVAILABILITY_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/placement/availability-zone")
 REGION=${{AVAILABILITY_ZONE:0:-1}}
 
 # Ensure DNS resolution and DNS hostnames are enabled (for VPC)
 echo "nameserver 169.254.169.253" >> /etc/resolv.conf
 
-# Retry adding nameserver if not properly configured
-while ! grep -q "169.254.169.253" /etc/resolv.conf; do
-    echo "nameserver 169.254.169.253" >> /etc/resolv.conf
-    sleep 5
-done
-
-# Fetch the FileSystemId based on the EFS name
-file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name' && Value=='CLiXX-EFS']].FileSystemId" --output text --region ${{REGION}})
+# Use the passed in file_system_id
+file_system_id="{file_system_id}"
 if [ -z "$file_system_id" ]; then
-    echo "Error: Unable to retrieve FileSystemId"
+    echo "Error: FileSystemId not provided"
     exit 1
 fi
 
 # Wait until the EFS is available
-echo "Waiting for EFS to be available..."
 while true; do
     status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region ${{REGION}})
-    echo "Current EFS status: $status"
     if [ "$status" == "available" ]; then
-        echo "EFS is available!"
         break
     fi
-    echo "EFS not available yet. Waiting..."
-    sleep 10  # Wait for 10 seconds before checking again
+    sleep 10
 done
 
-# Ensure the NFS service is running
-systemctl enable nfs
-systemctl start nfs
+# Restart network service to ensure DNS resolution
+sudo service network restart
 
-# Set variables
-MOUNT_POINT=/var/www/html
-
-# Create and set permissions for the mount point
+# Create mount point and set permissions
+MOUNT_POINT={mount_point}
 mkdir -p $MOUNT_POINT
 chown ec2-user:ec2-user $MOUNT_POINT
 
 # Add EFS to fstab and attempt to mount
-echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ $MOUNT_POINT nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
-
-# Retry mount with DNS resolution fix
+echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ $MOUNT_POINT nfs4 defaults,_netdev 0 0" >> /etc/fstab
 mount -a -t nfs4 || {{
-    echo "Mount failed, retrying after DNS fix..."
-    echo "nameserver 169.254.169.253" >> /etc/resolv.conf
-    sleep 5
+    echo "Mount failed, retrying..."
+    sudo service network restart
     mount -a -t nfs4
 }}
 
-# Verify the mount was successful
+# Check if mount was successful
 if ! mount | grep -q $MOUNT_POINT; then
     echo "Error: EFS mount failed"
     exit 1
 else
-    echo "EFS successfully mounted at $MOUNT_POINT"
+    echo "EFS successfully mounted"
 fi
 
-chmod -R 755 /var/www/html
-
-# Set your variables
-efs_name = "CLiXX-EFS"
+chmod -R 755 $MOUNT_POINT
 
 
 # Switch back to ec2-user
