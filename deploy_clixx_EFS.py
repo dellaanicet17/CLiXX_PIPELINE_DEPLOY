@@ -258,8 +258,7 @@ REGION=${{AVAILABILITY_ZONE:0:-1}}
 echo "nameserver 169.254.169.253" >> /etc/resolv.conf
 
 # Fetch the FileSystemId based on the EFS name
-file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name']].FileSystemId" --output text)
-
+file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name' && Value=='clixx_deploy_efs']].FileSystemId" --output text --region ${{REGION}})
 if [ -z "$file_system_id" ]; then
     echo "Error: Unable to retrieve FileSystemId"
     exit 1
@@ -268,7 +267,7 @@ fi
 # Wait until the EFS is available
 echo "Waiting for EFS to be available..."
 while true; do
-    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text)
+    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region ${{REGION}})
     echo "Current EFS status: $status"
     if [ "$status" == "available" ]; then
         echo "EFS is available!"
