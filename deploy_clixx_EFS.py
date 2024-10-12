@@ -153,7 +153,6 @@ efs_client.put_lifecycle_configuration(
     ]
 )
 
-
 # Step 4: Create Target Group
 target_group = elbv2_client.create_target_group(
     Name='CLiXX-TG',
@@ -409,10 +408,6 @@ EOF
     echo "Update queries executed successfully."
 fi
 
-#sleep 120
-#sudo su -
-#chown ec2-user:ec2-user $MOUNT_POINT
-#mount -a -t nfs4 && echo "EFS mounted successfully."
 '''
 
 # Encode the user data to Base64
