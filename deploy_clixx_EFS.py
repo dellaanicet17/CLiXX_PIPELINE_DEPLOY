@@ -303,7 +303,7 @@ chown ec2-user:ec2-user $MOUNT_POINT
 # Add EFS to fstab and attempt to mount
 echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ $MOUNT_POINT nfs4 defaults,_netdev 0 0" >> /etc/fstab
 
-sleep 120
+sleep 180
 # Attempt to mount, retrying if it fails
 attempt=0
 max_attempts=5
