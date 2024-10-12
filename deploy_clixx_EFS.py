@@ -254,8 +254,11 @@ TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-m
 AVAILABILITY_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/placement/availability-zone")
 REGION=${{AVAILABILITY_ZONE:0:-1}}
 
+# Ensure DNS resolution and DNS hostnames are enabled (for VPC)
+echo "nameserver 169.254.169.253" >> /etc/resolv.conf
+
 # Fetch the FileSystemId based on the EFS name
-file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name' && Value=='CLiXX-EFS']].FileSystemId" --output text --region ${{REGION}})
+file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name']].FileSystemId" --output text)
 
 if [ -z "$file_system_id" ]; then
     echo "Error: Unable to retrieve FileSystemId"
@@ -265,7 +268,7 @@ fi
 # Wait until the EFS is available
 echo "Waiting for EFS to be available..."
 while true; do
-    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region ${{REGION}})
+    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text)
     echo "Current EFS status: $status"
     if [ "$status" == "available" ]; then
         echo "EFS is available!"
@@ -275,6 +278,10 @@ while true; do
     sleep 10  # Wait for 10 seconds before checking again
 done
 
+# Ensure the NFS service is running
+systemctl enable nfs
+systemctl start nfs
+
 # Set variables
 MOUNT_POINT=/var/www/html
 
@@ -282,12 +289,17 @@ MOUNT_POINT=/var/www/html
 mkdir -p ${{MOUNT_POINT}}
 chown ec2-user:ec2-user ${{MOUNT_POINT}}
 
-# Mount the EFS file system
-sudo yum install -y nfs-utils
-sudo service nfs start
-
-echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ $MOUNT_POINT nfs4 defaults 0 0" >> /etc/fstab
+# Add EFS to fstab and attempt to mount
+echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ ${{MOUNT_POINT}} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
 mount -a -t nfs4
+
+# Retry the mount operation if it fails due to DNS issues
+if ! mount | grep -q ${{MOUNT_POINT}}; then
+    echo "Mount failed, retrying after DNS fix..."
+    echo "nameserver 169.254.169.253" >> /etc/resolv.conf
+    mount -a -t nfs4
+fi
+
 chmod -R 755 /var/www/html
 
 # Switch back to ec2-user
