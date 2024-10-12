@@ -258,7 +258,7 @@ REGION=${{AVAILABILITY_ZONE:0:-1}}
 echo "nameserver 169.254.169.253" >> /etc/resolv.conf
 
 # Fetch the FileSystemId based on the EFS name
-file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name' && Value=='clixx_deploy_efs']].FileSystemId" --output text --region ${{REGION}})
+file_system_id=$(aws efs describe-file-systems --query "FileSystems[?Tags[?Key=='Name' && Value=='CLIXX-EFS']].FileSystemId" --output text --region ${{REGION}})
 if [ -z "$file_system_id" ]; then
     echo "Error: Unable to retrieve FileSystemId"
     exit 1
