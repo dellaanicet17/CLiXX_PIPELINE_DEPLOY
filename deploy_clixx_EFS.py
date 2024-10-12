@@ -242,6 +242,9 @@ route53_client.change_resource_record_sets(
 #MOUNT_POINT = "/var/www/html"
 user_data_script = f'''#!/bin/bash
 
+#Switch to root user
+sudo su -
+
 # Update packages and install necessary utilities
 yum update -y
 yum install -y nfs-utils 
