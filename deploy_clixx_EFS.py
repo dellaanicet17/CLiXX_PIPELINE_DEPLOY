@@ -248,7 +248,7 @@ sudo su -
 
 # Update packages and install necessary utilities
 yum update -y
-yum install -y nfs-utils
+yum install -y nfs-utils aws-cli
 
 # Fetch the session token and region information for metadata
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
@@ -265,14 +265,29 @@ if [ -z "$file_system_id" ]; then
     exit 1
 fi
 
-# Wait until the EFS mount target is available
+# Install the NFS utilities for mounting EFS
+yum install -y nfs-utils
+
+# Wait until the EFS file system is available
 while true; do
-    status=$(aws efs describe-mount-targets --file-system-id $file_system_id --query "MountTargets[0].LifeCycleState" --output text --region ${{REGION}})
+    status=$(aws efs describe-file-systems --file-system-id $file_system_id --query "FileSystems[0].LifeCycleState" --output text --region $REGION)
     if [ "$status" == "available" ]; then
-        echo "Mount target is available, proceeding to mount..."
+        echo "EFS FileSystem is available."
         break
     else
-        echo "Mount target not available yet, retrying in 10 seconds..."
+        echo "Waiting for EFS FileSystem to become available. Retrying in 10 seconds..."
+    fi
+    sleep 10
+done
+
+# Ensure the mount target exists in the same availability zone as the EC2 instance
+while true; do
+    mount_target=$(aws efs describe-mount-targets --file-system-id $file_system_id --region $REGION --query 'MountTargets[?AvailabilityZoneName==`'$AVAILABILITY_ZONE'`].MountTargetId' --output text)
+    if [ -n "$mount_target" ]; then
+        echo "Mount target found in availability zone $AVAILABILITY_ZONE."
+        break
+    else
+        echo "Waiting for mount target in availability zone $AVAILABILITY_ZONE. Retrying in 10 seconds..."
     fi
     sleep 10
 done
@@ -285,19 +300,25 @@ MOUNT_POINT={mount_point}
 mkdir -p $MOUNT_POINT
 chown ec2-user:ec2-user $MOUNT_POINT
 
-# Attempt to mount EFS
+# Add EFS to fstab and attempt to mount
 echo "${{file_system_id}}.efs.${{REGION}}.amazonaws.com:/ $MOUNT_POINT nfs4 defaults,_netdev 0 0" >> /etc/fstab
-mount -a -t nfs4 || {{
+
+# Attempt to mount, retrying if it fails
+attempt=0
+max_attempts=5
+while (( attempt < max_attempts )); do
+    mount -a -t nfs4 && echo "EFS mounted successfully." && break
     echo "Mount failed, retrying after network restart..."
     sudo service network restart
-    mount -a -t nfs4
-}}
+    sleep 10
+    attempt=$((attempt + 1))
+done
 
-# Check if the mount was successful
+# Check if mount was successful
 if ! mount | grep -q $MOUNT_POINT; then
-    echo "Error: EFS mount failed. Continuing with the rest of the script."
+    echo "Error: EFS mount failed after $max_attempts attempts. Continuing with the rest of the script."
 else
-    echo "EFS successfully mounted."
+    echo "EFS successfully mounted at $MOUNT_POINT."
 fi
 
 chmod -R 755 $MOUNT_POINT
