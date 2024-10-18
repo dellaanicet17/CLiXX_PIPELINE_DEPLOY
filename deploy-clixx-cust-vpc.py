@@ -265,7 +265,8 @@ for snapshot in snapshots['DBSnapshots']:
     print(f"Snapshot ID: {snapshot['DBSnapshotIdentifier']}, ARN: {snapshot['DBSnapshotArn']}")
 
 snapshots = rds_client.describe_db_snapshots(
-    DBSnapshotIdentifier='db_snapshot_identifier'
+    IncludeShared=True
+    DBSnapshotIdentifier='arn:aws:rds:us-east-1:577701061234:snapshot:wordpressdbclixx-ecs-snapshot'
 )
 if snapshots['DBSnapshots'][0]['Status'] == 'available':
     print("Snapshot is ready for restore")
