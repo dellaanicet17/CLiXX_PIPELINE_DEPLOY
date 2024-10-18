@@ -172,12 +172,11 @@ try:
     )
     DBSubnetGroupName       = response['DBSubnetGroup']['DBSubnetGroupName']
     print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
-    
 
 except rds_client.exceptions.DBSubnetGroupAlreadyExistsFault:
-    print(f"DB Subnet Group '{db_subnet_group_name}' already exists. Proceeding with the existing one.")
+    print(f"DB Subnet Group '{DBSubnetGroupName}' already exists. Proceeding with the existing one.")
     response = rds_client.describe_db_subnet_groups(
-        DBSubnetGroupName=db_subnet_group_name
+        DBSubnetGroupName=DBSubnetGroupName
     )
     DBSubnetGroupName = response['DBSubnetGroups'][0]['DBSubnetGroupName']
 
