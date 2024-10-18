@@ -14,7 +14,7 @@ phases:
       - echo starting build on `date`
       - echo "Creating CliXX Security Group for apps and database"
       - |
-          flag='delete'  # Set flag value; make sure this is dynamically set as needed
+          flag='deploy_clixx'  # Set flag value; make sure this is dynamically set as needed
 
           if [[ $flag == 'restore' ]]; then
             echo "Restoring DB instance from snapshot..."
@@ -28,9 +28,17 @@ phases:
             echo "Deploying CLiXX mounted on EFS..."
             python deploy_clixx_EFS.py
 
+          elif [[ $flag == 'deploy_clixx' ]]; then
+            echo "Deploying CLiXX mounted on EFS..."
+            python deploy-clixx-cust-vpc.py
+
           elif [[ $flag == 'delete' ]]; then
-            echo "Deleting DB instance..."
+            echo "Deleting Clixx..."
             python delete_clixx_EFS.py
+
+          elif [[ $flag == 'delete_clixx' ]]; then
+            echo "Deleting Clixx..."
+            python delete-clixx-cust-vpc.py
 
           elif [[ $flag == 'assume' ]]; then
             echo "Assuming role..."
