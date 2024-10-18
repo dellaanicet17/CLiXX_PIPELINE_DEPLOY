@@ -169,10 +169,10 @@ try:
         SubnetIds                   =[priv_subnet1.id, priv_subnet2.id],
         DBSubnetGroupDescription    ='My stack DB subnet group',
         Tags                        =[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
-    
+    )
     DBSubnetGroupName       = response['DBSubnetGroup']['DBSubnetGroupName']
     print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
-    )
+    
 
 except rds_client.exceptions.DBSubnetGroupAlreadyExistsFault:
     print(f"DB Subnet Group '{db_subnet_group_name}' already exists. Proceeding with the existing one.")
