@@ -254,12 +254,23 @@ except Exception as e:
     print(f"An error occurred: {str(e)}")
 
 # Step 10: Restore DB Instance from Snapshot
-rds_client = boto3.client('rds')
 subnet_groups = rds_client.describe_db_subnet_groups()
 for subnet_group in subnet_groups['DBSubnetGroups']:
     if subnet_group['DBSubnetGroupName'] == 'clixx-db-subnet-group':
         DBSubnetGroupName = subnet_group['DBSubnetGroupName']
         break
+
+snapshots = rds_client.describe_db_snapshots()
+for snapshot in snapshots['DBSnapshots']:
+    print(f"Snapshot ID: {snapshot['DBSnapshotIdentifier']}, ARN: {snapshot['DBSnapshotArn']}")
+
+snapshots = rds_client.describe_db_snapshots(
+    DBSnapshotIdentifier='db_snapshot_identifier'
+)
+if snapshots['DBSnapshots'][0]['Status'] == 'available':
+    print("Snapshot is ready for restore")
+else:
+    print(f"Snapshot is in {snapshots['DBSnapshots'][0]['Status']} state")
 
 try:
     rds_client.restore_db_instance_from_db_snapshot(
