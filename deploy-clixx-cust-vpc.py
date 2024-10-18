@@ -162,15 +162,23 @@ private_sg.authorize_ingress(IpPermissions=[
 print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID: {private_sg.id})")
 
 
+# Create DB Subnet Group
+response = rds_client.create_db_subnet_group(
+        DBSubnetGroupName='mystack-db-subnet-group',
+        SubnetIds=[priv_subnet1.id, priv_subnet2.id],
+        DBSubnetGroupDescription='My stack DB subnet group',
+        Tags=t[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
+)
 # Step 7: Restore DB Instance from Snapshot
 rds_client.restore_db_instance_from_db_snapshot(
     DBInstanceIdentifier=db_instance_identifier,
     DBSnapshotIdentifier=db_snapshot_identifier,
     DBInstanceClass=db_instance_class,
     VpcSecurityGroupIds=[private_sg.id],
-    AvailabilityZone=availability_zones[0],
+    AvailabilityZone='us-east-1a',
     MultiAZ=False,
-    PubliclyAccessible=False
+    PubliclyAccessible=False,
+    DBSubnetGroupName=response.name
 )
 
 # Step 8: Create EFS file system
