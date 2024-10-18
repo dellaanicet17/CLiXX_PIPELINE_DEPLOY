@@ -181,6 +181,7 @@ rds_client.restore_db_instance_from_db_snapshot(
     DBSubnetGroupName=response['DBSubnetGroupName']
 )
 
+
 # Step 8: Create EFS file system
 efs_response = efs_client.create_file_system(
     CreationToken=efs_name,
