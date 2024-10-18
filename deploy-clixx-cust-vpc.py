@@ -287,11 +287,11 @@ try:
     )
     print(f"Restored DB instance '{db_instance_identifier}' from snapshot.")
 
-except botocore.exceptions.ClientError as e:
-    if 'DBInstanceAlreadyExists' in str(e):
-        print("DB instance already exists, skipping restoration.")
-    else:
-        raise e
+#except botocore.exceptions.ClientError as e:
+#    if 'DBInstanceAlreadyExists' in str(e):
+#        print("DB instance already exists, skipping restoration.")
+#    else:
+#        raise e
 
 # Step 11: Create EFS File System
 try:
