@@ -170,7 +170,7 @@ rds_client.restore_db_instance_from_db_snapshot(
     VpcSecurityGroupIds=[private_sg.id],
     AvailabilityZone=availability_zones[0],
     MultiAZ=False,
-    PubliclyAccessible=True
+    PubliclyAccessible=False
 )
 
 # Step 8: Create EFS file system
