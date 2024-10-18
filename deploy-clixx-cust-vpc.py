@@ -225,7 +225,33 @@ except botocore.exceptions.ClientError as e:
     else:
         raise e
 
+# Create DB Subnet Group
+# Create or handle existing DB Subnet Group
+DBSubnetGroupName = 'mystack-db-subnet-group'
+try:
+    response = rds_client.create_db_subnet_group(
+        DBSubnetGroupName=DBSubnetGroupName,
+        SubnetIds=[priv_subnet1.id, priv_subnet2.id],
+        DBSubnetGroupDescription='My stack DB subnet group',
+        Tags=[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
+    )
+    DBSubnetGroupName = response['DBSubnetGroup']['DBSubnetGroupName']
+    print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
 
+except rds_client.exceptions.DBSubnetGroupAlreadyExistsFault:
+    print(f"DB Subnet Group '{DBSubnetGroupName}' already exists. Proceeding with the existing one.")
+    response = rds_client.describe_db_subnet_groups(
+        DBSubnetGroupName=DBSubnetGroupName
+    )
+    # Check if the response contains the expected keys
+    if 'DBSubnetGroups' in response and len(response['DBSubnetGroups']) > 0:
+        DBSubnetGroupName = response['DBSubnetGroups'][0].get('DBSubnetGroupName', 'Unknown')
+        print(f"Using existing DB Subnet Group: '{DBSubnetGroupName}'")
+    else:
+        print("No DB Subnet Groups found in the response.")
+
+except Exception as e:
+    print(f"An error occurred: {str(e)}")
 
 # Step 10: Restore DB Instance from Snapshot
 rds_client = boto3.client('rds')
