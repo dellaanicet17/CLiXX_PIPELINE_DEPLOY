@@ -163,14 +163,15 @@ print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID:
 
 # Create DB Subnet Group
 # Create or handle existing DB Subnet Group
+DBSubnetGroupName = 'mystack-db-subnet-group'
 try:
     response = rds_client.create_db_subnet_group(
-        DBSubnetGroupName           ='mystack-db-subnet-group',
-        SubnetIds                   =[priv_subnet1.id, priv_subnet2.id],
-        DBSubnetGroupDescription    ='My stack DB subnet group',
-        Tags                        =[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
+        DBSubnetGroupName=DBSubnetGroupName,
+        SubnetIds=[priv_subnet1.id, priv_subnet2.id],
+        DBSubnetGroupDescription='My stack DB subnet group',
+        Tags=[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
     )
-    DBSubnetGroupName       = response['DBSubnetGroup']['DBSubnetGroupName']
+    DBSubnetGroupName = response['DBSubnetGroup']['DBSubnetGroupName']
     print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
 
 except rds_client.exceptions.DBSubnetGroupAlreadyExistsFault:
