@@ -178,7 +178,7 @@ rds_client.restore_db_instance_from_db_snapshot(
     AvailabilityZone='us-east-1a',
     MultiAZ=False,
     PubliclyAccessible=False,
-    DBSubnetGroupName=response.name
+    DBSubnetGroupName=response['DBSubnetGroupName']
 )
 
 # Step 8: Create EFS file system
