@@ -179,7 +179,12 @@ except rds_client.exceptions.DBSubnetGroupAlreadyExistsFault:
     response = rds_client.describe_db_subnet_groups(
         DBSubnetGroupName=DBSubnetGroupName
     )
-    DBSubnetGroupName = response['DBSubnetGroups'][0]['DBSubnetGroupName']
+    # Check if the response contains the expected keys
+    if 'DBSubnetGroups' in response and len(response['DBSubnetGroups']) > 0:
+        DBSubnetGroupName = response['DBSubnetGroups'][0].get('DBSubnetGroupName', 'Unknown')
+        print(f"Using existing DB Subnet Group: '{DBSubnetGroupName}'")
+    else:
+        print("No DB Subnet Groups found in the response.")
 
 except Exception as e:
     print(f"An error occurred: {str(e)}")
