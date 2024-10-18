@@ -74,6 +74,7 @@ except botocore.exceptions.ClientError as e:
     else:
         raise e
 
+
 # Step 2: Create Internet Gateway and Attach to VPC
 try:
     igw = ec2_resource.create_internet_gateway(
