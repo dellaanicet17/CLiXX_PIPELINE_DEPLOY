@@ -161,14 +161,14 @@ private_sg.authorize_ingress(IpPermissions=[
 ])
 print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID: {private_sg.id})")
 
-
 # Create DB Subnet Group
 response = rds_client.create_db_subnet_group(
         DBSubnetGroupName='mystack-db-subnet-group',
         SubnetIds=[priv_subnet1.id, priv_subnet2.id],
         DBSubnetGroupDescription='My stack DB subnet group',
-        Tags=t[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
+        Tags=[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
 )
+
 # Step 7: Restore DB Instance from Snapshot
 rds_client.restore_db_instance_from_db_snapshot(
     DBInstanceIdentifier=db_instance_identifier,
