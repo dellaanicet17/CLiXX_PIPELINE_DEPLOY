@@ -224,7 +224,16 @@ except botocore.exceptions.ClientError as e:
     else:
         raise e
 
+
+
 # Step 10: Restore DB Instance from Snapshot
+rds_client = boto3.client('rds')
+subnet_groups = rds_client.describe_db_subnet_groups()
+for subnet_group in subnet_groups['DBSubnetGroups']:
+    if subnet_group['DBSubnetGroupName'] == 'clixx-db-subnet-group':
+        DBSubnetGroupName = subnet_group['DBSubnetGroupName']
+        break
+
 try:
     rds_client.restore_db_instance_from_db_snapshot(
         DBInstanceIdentifier=db_instance_identifier,
