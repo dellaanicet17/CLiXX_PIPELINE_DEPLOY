@@ -88,6 +88,7 @@ except botocore.exceptions.ClientError as e:
         raise e
 
 # Step 3: Create Public Subnet 1
+availability_zones = ['us-east-1a', 'us-east-1b']
 try:
     pub_subnet1 = ec2_resource.create_subnet(
         CidrBlock='10.0.1.0/24',
