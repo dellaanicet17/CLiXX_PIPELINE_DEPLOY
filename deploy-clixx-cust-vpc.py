@@ -162,12 +162,27 @@ private_sg.authorize_ingress(IpPermissions=[
 print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID: {private_sg.id})")
 
 # Create DB Subnet Group
-response = rds_client.create_db_subnet_group(
-        DBSubnetGroupName='mystack-db-subnet-group',
-        SubnetIds=[priv_subnet1.id, priv_subnet2.id],
-        DBSubnetGroupDescription='My stack DB subnet group',
-        Tags=[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
-)
+# Create or handle existing DB Subnet Group
+try:
+    response = rds_client.create_db_subnet_group(
+        DBSubnetGroupName           ='mystack-db-subnet-group',
+        SubnetIds                   =[priv_subnet1.id, priv_subnet2.id],
+        DBSubnetGroupDescription    ='My stack DB subnet group',
+        Tags                        =[{'Key': 'Name', 'Value': 'MYSTACKDBSUBNETGROUP'}]
+    
+    DBSubnetGroupName       = response['DBSubnetGroup']['DBSubnetGroupName']
+    print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
+    )
+
+except rds_client.exceptions.DBSubnetGroupAlreadyExistsFault:
+    print(f"DB Subnet Group '{db_subnet_group_name}' already exists. Proceeding with the existing one.")
+    response = rds_client.describe_db_subnet_groups(
+        DBSubnetGroupName=db_subnet_group_name
+    )
+    DBSubnetGroupName = response['DBSubnetGroups'][0]['DBSubnetGroupName']
+
+except Exception as e:
+    print(f"An error occurred: {str(e)}")
 
 # Step 7: Restore DB Instance from Snapshot
 rds_client.restore_db_instance_from_db_snapshot(
