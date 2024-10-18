@@ -53,7 +53,7 @@ key_pair_name = 'stack_devops_kp'
 instance_type = 't2.micro'
 db_instance_identifier = 'wordpressdbclixx'
 db_snapshot_identifier = 'arn:aws:rds:us-east-1:577701061234:snapshot:wordpressdbclixx-ecs-snapshot'
-db_instance_class = 'db.m6gd.large'
+db_instance_class = 'db.m6g.large'
 efs_name = 'CLiXX-EFS'
 hosted_zone_id = 'Z04517273VCLIDX9UEQR7'
 record_name = 'test.clixx-della.com'
@@ -206,16 +206,21 @@ except Exception as e:
     print(f"An error occurred while restoring the DB instance: {str(e)}")
 
 # Step 8: Create EFS file system
-efs_response = efs_client.create_file_system(
-    CreationToken=efs_name,
-    PerformanceMode='generalPurpose', 
-    Encrypted=False,
-    ThroughputMode='bursting', 
-    Tags=[
-        {'Key': 'Name', 'Value': efs_name}
-    ]
+# Check if EFS with creation token exists
+efs_response = efs_client.describe_file_systems(
+    CreationToken='CLiXX-EFS'
 )
-file_system_id = efs_response['FileSystemId']
+
+# If it exists, proceed with the existing EFS
+if efs_response['FileSystems']:
+    file_system_id = efs_response['FileSystems'][0]['FileSystemId']
+else:
+    # Create EFS
+    efs_response = efs_client.create_file_system(
+        CreationToken='CLiXX-EFS',
+        PerformanceMode='generalPurpose'
+    )
+    file_system_id = efs_response['FileSystemId']
 
 # Wait until the EFS file system is in 'available' state
 while True:
