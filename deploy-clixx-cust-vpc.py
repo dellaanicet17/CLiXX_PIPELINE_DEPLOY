@@ -344,14 +344,18 @@ efs_client.put_lifecycle_configuration(
 print(f"Lifecycle policy applied to EFS CLiXX-EFS")
 
 # --- Create Target Group ---
-# Describe target groups to check if 'CLiXX-TG' exists
-existing_tg_response = elbv2_client.describe_target_groups(Names=['CLiXX-TG'])
+# List all target groups and filter for 'CLiXX-TG'
+all_tg_response = elbv2_client.describe_target_groups()
+target_groups = all_tg_response['TargetGroups']
 
-if existing_tg_response['TargetGroups']:
-    # Target group already exists
-    target_group_arn = existing_tg_response['TargetGroups'][0]['TargetGroupArn']
-    print(f"Target Group already exists with ARN: {target_group_arn}")
-else:
+# Check if 'CLiXX-TG' exists in the list of target groups
+target_group_arn = None
+for tg in target_groups:
+    if tg['TargetGroupName'] == 'CLiXX-TG':
+        target_group_arn = tg['TargetGroupArn']
+        print(f"Target Group already exists with ARN: {target_group_arn}")
+        break
+if target_group_arn is None:
     # Target group does not exist, create a new one
     print("Target Group 'CLiXX-TG' not found. Creating a new target group.")
     target_group = elbv2_client.create_target_group(
@@ -364,6 +368,7 @@ else:
     target_group_arn = target_group['TargetGroups'][0]['TargetGroupArn']
     print(f"Target Group created with ARN: {target_group_arn}")
 
+
 # --- Create Application Load Balancer ---
 existing_lb_response = elbv2_client.describe_load_balancers(Names=['CLiXX-LB'])
 if existing_lb_response['LoadBalancers']:
@@ -372,7 +377,7 @@ if existing_lb_response['LoadBalancers']:
 else:
     load_balancer = elbv2_client.create_load_balancer(
         Name='CLiXX-LB',
-        Subnets=[subnet_1.id, subnet_2.id],
+        Subnets=[subnet_1_id, subnet_2_id],
         SecurityGroups=[public_sg.id],
         Scheme='internet-facing',
         Type='application',
