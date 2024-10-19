@@ -314,7 +314,7 @@ private_subnet_ids = [private_subnet_1_id, private_subnet_2_id]
 for private_subnet_id in private_subnet_ids:
     # Check if mount target already exists for the subnet
     mount_targets_response = efs_client.describe_mount_targets(
-        FileSystemId=file_system_id  # Use FileSystemId to filter by file system
+        FileSystemId=file_system_id
     )
     # Extract the list of subnet IDs for existing mount targets
     existing_mount_targets = [mt['SubnetId'] for mt in mount_targets_response['MountTargets']]
@@ -323,7 +323,7 @@ for private_subnet_id in private_subnet_ids:
         mount_target_response = efs_client.create_mount_target(
             FileSystemId=file_system_id,
             SubnetId=private_subnet_id,
-            SecurityGroups=[private_sg.id]  # Assuming private_sg.id is correct
+            SecurityGroups=[private_sg.id]
         )
         print(f"Mount target created in Private Subnet: {private_subnet_id}")
     else:
@@ -334,10 +334,10 @@ efs_client.put_lifecycle_configuration(
     FileSystemId=file_system_id,
     LifecyclePolicies=[
         {
-            'TransitionToIA': 'AFTER_30_DAYS'  # Archive files after 30 days
+            'TransitionToIA': 'AFTER_30_DAYS'
         },
         {
-            'TransitionToPrimaryStorageClass': 'AFTER_1_ACCESS'  # Move back on first access
+            'TransitionToPrimaryStorageClass': 'AFTER_1_ACCESS'
         }
     ]
 )
@@ -444,7 +444,7 @@ if not record_exists:
                     'Name': record_name,
                     'Type': 'A',
                     'AliasTarget': {
-                        'HostedZoneId': 'Z35SXDOTRQ7X7K',  # Ensure this is the correct hosted zone ID for the load balancer
+                        'HostedZoneId': 'Z35SXDOTRQ7X7K',
                         'DNSName': load_balancer['LoadBalancers'][0]['DNSName'],
                         'EvaluateTargetHealth': False
                     }
@@ -653,7 +653,12 @@ else:
             'UserData': user_data_base64,  
             'IamInstanceProfile': {
                 'Name': 'EFS_operations'  
-            }
+            },
+            'NetworkInterfaces': [{
+            'AssociatePublicIpAddress': True,
+            'DeviceIndex': 0,
+            'SubnetId': subnet_1_id
+            }]
         }
     )
     launch_template_id = launch_template['LaunchTemplate']['LaunchTemplateId']
