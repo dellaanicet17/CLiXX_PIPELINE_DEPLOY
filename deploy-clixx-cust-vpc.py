@@ -254,7 +254,7 @@ if not db_subnet_group_exists:
     )
     DBSubnetGroupName = response['DBSubnetGroup']['DBSubnetGroupName']
     print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
-    
+
 # List all DB instances and check if the desired instance exists
 db_instances = rds_client.describe_db_instances()
 db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
@@ -264,19 +264,14 @@ if db_instance_identifier in db_instance_identifiers:
 else:
     print(f"DB Instance '{db_instance_identifier}' not found.")
 
-rds_client.create_db_instance(
+rds_client.restore_db_instance_from_db_snapshot(
     DBInstanceIdentifier=db_instance_identifier,
     DBSnapshotIdentifier=db_snapshot_identifier,
-    DBInstanceClass=db_instance_class,
-    VpcSecurityGroupIds=[private_sg],
+    VpcSecurityGroupIds=[private_sg.id], 
     DBSubnetGroupName=DBSubnetGroupName,
-    AllocatedStorage=20,
-    Engine="mysql",
-    MultiAZ=False,  
-    PubliclyAccessible=False,  
+    PubliclyAccessible=False,
     Tags=[{'Key': 'Name', 'Value': 'wordpressdbclixx'}]
 )
-
 
 # --- Create EFS file system ---
 # Check if EFS with creation token exists
