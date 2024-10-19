@@ -158,7 +158,8 @@ else:
     print("Public route for Internet access already exists")
 
 # --- Associate Subnets with Route Tables ---
-pub_associations = list(pub_route_table.associations.filter(Filters=[{'Name': 'subnet-id', 'Values': [subnet_1.id, subnet_2.id]}]))
+# Check if the public subnets are associated with the public route table
+pub_associations = [assoc for assoc in pub_route_table.associations if assoc.subnet_id in [subnet_1.id, subnet_2.id]]
 if not pub_associations:
     pub_route_table.associate_with_subnet(SubnetId=subnet_1.id)
     pub_route_table.associate_with_subnet(SubnetId=subnet_2.id)
@@ -166,7 +167,8 @@ if not pub_associations:
 else:
     print("Public subnets already associated with Public Route Table")
 
-priv_associations = list(priv_route_table.associations.filter(Filters=[{'Name': 'subnet-id', 'Values': [private_subnet_1.id, private_subnet_2.id]}]))
+# Check if the private subnets are associated with the private route table
+priv_associations = [assoc for assoc in priv_route_table.associations if assoc.subnet_id in [private_subnet_1.id, private_subnet_2.id]]
 if not priv_associations:
     priv_route_table.associate_with_subnet(SubnetId=private_subnet_1.id)
     priv_route_table.associate_with_subnet(SubnetId=private_subnet_2.id)
