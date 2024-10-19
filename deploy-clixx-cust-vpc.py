@@ -67,79 +67,79 @@ record_name = "test.clixx-della.com"
 aws_region = "us-east-1"
 
 # --- VPC ---
-vpcs = ec2_resource.describe_vpcs(Filters=[{'Name': 'cidr-block', 'Values': [vpc_cidr_block]}])
+vpcs = ec2_client.describe_vpcs(Filters=[{'Name': 'cidr', 'Values': [vpc_cidr_block]}])
 if not vpcs['Vpcs']:
     vpc = ec2_resource.create_vpc(CidrBlock=vpc_cidr_block)
-    ec2_resource.create_tags(Resources=[vpc['Vpc']['VpcId']], Tags=[{'Key': 'Name', 'Value': 'TESTSTACKVPC'}])
-    ec2_resource.modify_vpc_attribute(VpcId=vpc['Vpc']['VpcId'], EnableDnsSupport={'Value': True})
-    ec2_resource.modify_vpc_attribute(VpcId=vpc['Vpc']['VpcId'], EnableDnsHostnames={'Value': True})
-    print(f"VPC created: {vpc['Vpc']['VpcId']} with Name tag 'TESTSTACKVPC'")
+    ec2_client.create_tags(Resources=[vpc.id], Tags=[{'Key': 'Name', 'Value': 'TESTSTACKVPC'}])
+    ec2_client.modify_vpc_attribute(VpcId=vpc.id, EnableDnsSupport={'Value': True})
+    ec2_client.modify_vpc_attribute(VpcId=vpc.id, EnableDnsHostnames={'Value': True})
+    print(f"VPC created: {vpc.id} with Name tag 'TESTSTACKVPC'")
 else:
     print(f"VPC already exists with CIDR block {vpc_cidr_block}")
-vpc_id = vpcs['Vpcs'][0]['VpcId'] if vpcs['Vpcs'] else vpc['Vpc']['VpcId']
+vpc_id = vpcs['Vpcs'][0]['VpcId'] if vpcs['Vpcs'] else vpc.id
 
 # --- Subnets ---
-subnets_1 = ec2_resource.describe_subnets(Filters=[{'Name': 'cidr-block', 'Values': [public_subnet_cidr_block_1]}])
+subnets_1 = ec2_client.describe_subnets(Filters=[{'Name': 'cidr', 'Values': [public_subnet_cidr_block_1]}])
 if not subnets_1['Subnets']:
-    subnet_1 = ec2_resource.create_subnet(CidrBlock=public_subnet_cidr_block_1, VpcId=vpc_id, AvailabilityZone=aws_region + "a")
-    ec2_resource.create_tags(Resources=[subnet_1['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPUBSUB"}])
+    subnet_1 = ec2_client.create_subnet(CidrBlock=public_subnet_cidr_block_1, VpcId=vpc_id, AvailabilityZone=aws_region + "a")
+    ec2_client.create_tags(Resources=[subnet_1['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPUBSUB"}])
     print(f"Public Subnet 1 created: {subnet_1['Subnet']['SubnetId']} with Name tag 'TESTSTACKPUBSUB'")
 else:
     print(f"Public Subnet 1 already exists with CIDR block {public_subnet_cidr_block_1}")
 subnet_1_id = subnets_1['Subnets'][0]['SubnetId'] if subnets_1['Subnets'] else subnet_1['Subnet']['SubnetId']
 
-subnets_2 = ec2_resource.describe_subnets(Filters=[{'Name': 'cidr-block', 'Values': [public_subnet_cidr_block_2]}])
+subnets_2 = ec2_client.describe_subnets(Filters=[{'Name': 'cidr', 'Values': [public_subnet_cidr_block_2]}])
 if not subnets_2['Subnets']:
-    subnet_2 = ec2_resource.create_subnet(CidrBlock=public_subnet_cidr_block_2, VpcId=vpc_id, AvailabilityZone=aws_region + "b")
-    ec2_resource.create_tags(Resources=[subnet_2['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPUBSUB2"}])
+    subnet_2 = ec2_client.create_subnet(CidrBlock=public_subnet_cidr_block_2, VpcId=vpc_id, AvailabilityZone=aws_region + "b")
+    ec2_client.create_tags(Resources=[subnet_2['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPUBSUB2"}])
     print(f"Public Subnet 2 created: {subnet_2['Subnet']['SubnetId']} with Name tag 'TESTSTACKPUBSUB2'")
 else:
     print(f"Public Subnet 2 already exists with CIDR block {public_subnet_cidr_block_2}")
 subnet_2_id = subnets_2['Subnets'][0]['SubnetId'] if subnets_2['Subnets'] else subnet_2['Subnet']['SubnetId']
 
-private_subnets_1 = ec2_resource.describe_subnets(Filters=[{'Name': 'cidr-block', 'Values': [private_subnet_cidr_block_1]}])
+private_subnets_1 = ec2_client.describe_subnets(Filters=[{'Name': 'cidr', 'Values': [private_subnet_cidr_block_1]}])
 if not private_subnets_1['Subnets']:
-    private_subnet_1 = ec2_resource.create_subnet(CidrBlock=private_subnet_cidr_block_1, VpcId=vpc_id, AvailabilityZone=aws_region + "a")
-    ec2_resource.create_tags(Resources=[private_subnet_1['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPRIVSUB1"}])
+    private_subnet_1 = ec2_client.create_subnet(CidrBlock=private_subnet_cidr_block_1, VpcId=vpc_id, AvailabilityZone=aws_region + "a")
+    ec2_client.create_tags(Resources=[private_subnet_1['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPRIVSUB1"}])
     print(f"Private Subnet 1 created: {private_subnet_1['Subnet']['SubnetId']} with Name tag 'TESTSTACKPRIVSUB1'")
 else:
     print(f"Private Subnet 1 already exists with CIDR block {private_subnet_cidr_block_1}")
 private_subnet_1_id = private_subnets_1['Subnets'][0]['SubnetId'] if private_subnets_1['Subnets'] else private_subnet_1['Subnet']['SubnetId']
 
-private_subnets_2 = ec2_resource.describe_subnets(Filters=[{'Name': 'cidr-block', 'Values': [private_subnet_cidr_block_2]}])
+private_subnets_2 = ec2_client.describe_subnets(Filters=[{'Name': 'cidr', 'Values': [private_subnet_cidr_block_2]}])
 if not private_subnets_2['Subnets']:
-    private_subnet_2 = ec2_resource.create_subnet(CidrBlock=private_subnet_cidr_block_2, VpcId=vpc_id, AvailabilityZone=aws_region + "b")
-    ec2_resource.create_tags(Resources=[private_subnet_2['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPRIVSUB2"}])
+    private_subnet_2 = ec2_client.create_subnet(CidrBlock=private_subnet_cidr_block_2, VpcId=vpc_id, AvailabilityZone=aws_region + "b")
+    ec2_client.create_tags(Resources=[private_subnet_2['Subnet']['SubnetId']], Tags=[{'Key': 'Name', 'Value': "TESTSTACKPRIVSUB2"}])
     print(f"Private Subnet 2 created: {private_subnet_2['Subnet']['SubnetId']} with Name tag 'TESTSTACKPRIVSUB2'")
 else:
     print(f"Private Subnet 2 already exists with CIDR block {private_subnet_cidr_block_2}")
 private_subnet_2_id = private_subnets_2['Subnets'][0]['SubnetId'] if private_subnets_2['Subnets'] else private_subnet_2['Subnet']['SubnetId']
 
 # --- Internet Gateway ---
-igw_list = list(ec2_resource.internet_gateways.filter(Filters=[{'Name': 'attachment.vpc-id', 'Values': [vpc.id]}]))
+igw_list = list(ec2_resource.internet_gateways.filter(Filters=[{'Name': 'attachment.vpc-id', 'Values': [vpc_id]}]))
 if not igw_list:
     igw = ec2_resource.create_internet_gateway()
-    vpc.attach_internet_gateway(InternetGatewayId=igw.id)
-    igw.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKIGW'}])
+    ec2_client.attach_internet_gateway(VpcId=vpc_id, InternetGatewayId=igw.id)
+    ec2_client.create_tags(Resources=[igw.id], Tags=[{'Key': 'Name', 'Value': 'TESTSTACKIGW'}])
     print(f"Internet Gateway created: {igw.id} with Name tag 'TESTSTACKIGW'")
 else:
     igw = igw_list[0]
     print(f"Internet Gateway already exists with ID {igw.id}")
 
 # --- Route Tables ---
-pub_route_table_list = list(vpc.route_tables.filter(Filters=[{'Name': 'association.main', 'Values': ['false']}]))
+pub_route_table_list = list(ec2_resource.route_tables.filter(Filters=[{'Name': 'association.main', 'Values': ['false']}]))
 if not pub_route_table_list:
-    pub_route_table = ec2_resource.create_route_table(VpcId=vpc.id)
-    pub_route_table.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKPUBRT'}])
+    pub_route_table = ec2_resource.create_route_table(VpcId=vpc_id)
+    ec2_client.create_tags(Resources=[pub_route_table.id], Tags=[{'Key': 'Name', 'Value': 'TESTSTACKPUBRT'}])
     print(f"Public Route Table created: {pub_route_table.id} with Name tag 'TESTSTACKPUBRT'")
 else:
     pub_route_table = pub_route_table_list[0]
     print(f"Public Route Table already exists with ID {pub_route_table.id}")
 
-priv_route_table_list = list(vpc.route_tables.filter(Filters=[{'Name': 'association.main', 'Values': ['false']}]))
+priv_route_table_list = list(ec2_resource.route_tables.filter(Filters=[{'Name': 'association.main', 'Values': ['false']}]))
 if not priv_route_table_list:
-    priv_route_table = ec2_resource.create_route_table(VpcId=vpc.id)
-    priv_route_table.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKPRIVRT'}])
+    priv_route_table = ec2_resource.create_route_table(VpcId=vpc_id)
+    ec2_client.create_tags(Resources=[priv_route_table.id], Tags=[{'Key': 'Name', 'Value': 'TESTSTACKPRIVRT'}])
     print(f"Private Route Table created: {priv_route_table.id} with Name tag 'TESTSTACKPRIVRT'")
 else:
     priv_route_table = priv_route_table_list[0]
@@ -176,21 +176,23 @@ print("Route tables created and associated with subnets.")
 
 # --- Security Group ---
 # Check for existing public security group
-existing_public_sg = list(ec2_resource.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSG']}]))
+existing_public_sg = list(ec2_client.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSG']}]))
 if not existing_public_sg:
     public_sg = ec2_resource.create_security_group(
         GroupName='TESTSTACKSG',
         Description='Public Security Group for App Servers',
         VpcId=vpc.id
     )
-    public_sg.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSG'}])
-    
-    public_sg.authorize_ingress(IpPermissions=[
-        {'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22, 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # SSH
-        {'IpProtocol': 'tcp', 'FromPort': 80, 'ToPort': 80, 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # HTTP
-        {'IpProtocol': 'tcp', 'FromPort': 443, 'ToPort': 443, 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # HTTPS
-        {'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # NFS (EFS)
-        {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # MySQL (RDS)
+    ec2_client.create_tags(Resources=[public_sg.id], Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSG'}])
+    # Authorize ingress rules for the public security group
+    ec2_client.authorize_security_group_ingress(
+        GroupId=public_sg.id,
+        IpPermissions=[
+            {'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22, 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # SSH
+            {'IpProtocol': 'tcp', 'FromPort': 80, 'ToPort': 80, 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # HTTP
+            {'IpProtocol': 'tcp', 'FromPort': 443, 'ToPort': 443, 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # HTTPS
+            {'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # NFS (EFS)
+            {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # MySQL (RDS)
     ])
     print(f"Public Security Group created: {public_sg.id}")
 else:
@@ -198,18 +200,20 @@ else:
     print(f"Public Security Group already exists with ID: {public_sg.id}")
 
 # Check for existing private security group
-existing_private_sg = list(ec2_resource.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSGPRIV']}]))
+existing_private_sg = list(ec2_client.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSGPRIV']}]))
 if not existing_private_sg:
     private_sg = ec2_resource.create_security_group(
         GroupName='TESTSTACKSGPRIV',
         Description='Private Security Group for RDS and EFS',
         VpcId=vpc.id
     )
-    private_sg.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSGPRIV'}])
-    
-    private_sg.authorize_ingress(IpPermissions=[
-        {'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # NFS (EFS)
-        {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # MySQL (RDS)
+    ec2_client.create_tags(Resources=[private_sg.id],Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSGPRIV'}])
+    # Authorize ingress rules for the private security group
+    ec2_client.authorize_security_group_ingress(
+        GroupId=private_sg.id,
+        IpPermissions=[
+            {'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # NFS (EFS)
+            {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # MySQL (RDS)
     ])
     print(f"Private Security Group created: {private_sg.id}")
 else:
@@ -218,9 +222,9 @@ else:
 print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID: {private_sg.id})")
 
 # --- RDS Instance ---
-instances = rds.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
+instances = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
 if not instances['DBInstances']:
-    rds.create_db_instance(
+    rds_client.create_db_instance(
         DBInstanceIdentifier=db_instance_identifier,
         DBSnapshotIdentifier=db_snapshot_identifier,
         DBInstanceClass=db_instance_class,
@@ -323,7 +327,7 @@ if existing_lb_response['LoadBalancers']:
 else:
     load_balancer = elbv2_client.create_load_balancer(
         Name='CLiXX-LB',
-        Subnets=[pub_subnet1.id, pub_subnet2.id],
+        Subnets=[subnet_1.id, subnet_2.id],
         SecurityGroups=[public_sg.id],
         Scheme='internet-facing',
         Type='application',
