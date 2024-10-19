@@ -230,6 +230,24 @@ else:
 print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID: {private_sg.id})")
 
 # --- RDS Instance ---
+# Create or handle existing DB Subnet Group
+DBSubnetGroupName = 'TESTSTACKDBSUBNETGROUP'
+# Check if the DB Subnet Group already exists
+response = rds_client.describe_db_subnet_groups(DBSubnetGroupName=DBSubnetGroupName)
+if 'DBSubnetGroups' in response and len(response['DBSubnetGroups']) > 0:
+    DBSubnetGroupName = response['DBSubnetGroups'][0].get('DBSubnetGroupName', 'Unknown')
+    print(f"DB Subnet Group '{DBSubnetGroupName}' already exists. Proceeding with the existing one.")
+else:
+    # Create the DB Subnet Group if it does not exist
+    response = rds_client.create_db_subnet_group(
+        DBSubnetGroupName=DBSubnetGroupName,
+        SubnetIds=[private_subnet_1_id, private_subnet_2_id],
+        DBSubnetGroupDescription='My stack DB subnet group',
+        Tags=[{'Key': 'Name', 'Value': 'TESTSTACKDBSUBNETGROUP'}]
+    )
+    DBSubnetGroupName = response['DBSubnetGroup']['DBSubnetGroupName']
+    print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
+
 # List all DB instances and check if the desired instance exists
 db_instances = rds_client.describe_db_instances()
 db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
@@ -243,11 +261,13 @@ rds_client.create_db_instance(
     DBInstanceIdentifier=db_instance_identifier,
     DBSnapshotIdentifier=db_snapshot_identifier,
     DBInstanceClass=db_instance_class,
-    VpcSecurityGroupIds=[public_sg],
+    VpcSecurityGroupIds=[private_sg],
+    DBSubnetGroupName=DBSubnetGroupName,
     AllocatedStorage=20,
     Engine="mysql",
-    MasterUsername=db_username,
-    MasterUserPassword=db_password,
+    MultiAZ=False,  
+    PubliclyAccessible=False,  
+    Tags=[{'Key': 'Name', 'Value': 'wordpressdbclixx'}]
 )
 
 
