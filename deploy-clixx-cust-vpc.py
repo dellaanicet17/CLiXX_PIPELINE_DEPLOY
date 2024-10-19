@@ -649,15 +649,16 @@ else:
             'ImageId': ami_id,  
             'InstanceType': instance_type,  
             'KeyName': key_pair_name,  
-            'SecurityGroupIds': [public_sg.id],  
+            #'SecurityGroupIds': [public_sg.id],  
             'UserData': user_data_base64,  
             'IamInstanceProfile': {
                 'Name': 'EFS_operations'  
             },
             'NetworkInterfaces': [{
-            'AssociatePublicIpAddress': True,
-            'DeviceIndex': 0,
-            'SubnetId': subnet_1_id
+                'AssociatePublicIpAddress': True,
+                'DeviceIndex': 0,
+                'SubnetId': subnet_1_id,
+                'Groups': [public_sg.id]
             }]
         }
     )
