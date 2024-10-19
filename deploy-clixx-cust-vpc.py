@@ -677,7 +677,7 @@ else:
         MinSize=1,
         MaxSize=3,
         DesiredCapacity=1,
-        VPCZoneIdentifier=f'{subnet_1.id},{subnet_2.id}',
+        VPCZoneIdentifier=[subnet_1_id, subnet_2_id],
         TargetGroupARNs=[target_group_arn], 
         Tags=[
             {
