@@ -230,21 +230,25 @@ else:
 print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID: {private_sg.id})")
 
 # --- RDS Instance ---
-instances = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
-if not instances['DBInstances']:
-    rds_client.create_db_instance(
-        DBInstanceIdentifier=db_instance_identifier,
-        DBSnapshotIdentifier=db_snapshot_identifier,
-        DBInstanceClass=db_instance_class,
-        VpcSecurityGroupIds=[public_sg],
-        AllocatedStorage=20,
-        Engine="mysql",
-        MasterUsername=db_username,
-        MasterUserPassword=db_password,
-    )
-    print(f"RDS instance {db_instance_identifier} created with Name tag 'WordPressDB'")
+# List all DB instances and check if the desired instance exists
+db_instances = rds_client.describe_db_instances()
+db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
+if db_instance_identifier in db_instance_identifiers:
+    instances = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
+    print(f"DB Instance details: {instances}")
 else:
-    print(f"RDS instance {db_instance_identifier} already exists")
+    print(f"DB Instance '{db_instance_identifier}' not found.")
+
+rds_client.create_db_instance(
+    DBInstanceIdentifier=db_instance_identifier,
+    DBSnapshotIdentifier=db_snapshot_identifier,
+    DBInstanceClass=db_instance_class,
+    VpcSecurityGroupIds=[public_sg],
+    AllocatedStorage=20,
+    Engine="mysql",
+    MasterUsername=db_username,
+    MasterUserPassword=db_password,
+)
 
 # --- Create EFS file system ---
 # Check if EFS with creation token exists
