@@ -146,7 +146,9 @@ else:
     print(f"Private Route Table already exists with ID {priv_route_table.id}")
 
 # --- Route for Internet Access for Public Subnets ---
-routes = list(pub_route_table.routes.filter(Filters=[{'Name': 'destination-cidr-block', 'Values': ['0.0.0.0/0']}]))
+# Make sure to get the routes from the route table object instead of a list
+routes = list(pub_route_table.routes.all())
+routes = [route for route in routes if route.destination_cidr_block == '0.0.0.0/0']  # Filter for the route you want
 if not routes:
     pub_route_table.create_route(
         DestinationCidrBlock='0.0.0.0/0',
