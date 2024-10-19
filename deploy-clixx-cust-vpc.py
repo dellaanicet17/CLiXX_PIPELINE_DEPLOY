@@ -179,15 +179,16 @@ print("Route tables created and associated with subnets.")
 
 # --- Security Group ---
 # Check for existing public security group
-existing_public_sg = list(ec2_client.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSG']}]))
+existing_public_sg = list(ec2_resource.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSG']}]))
 if not existing_public_sg:
     public_sg = ec2_resource.create_security_group(
         GroupName='TESTSTACKSG',
         Description='Public Security Group for App Servers',
         VpcId=vpc.id
     )
-    ec2_client.create_tags(Resources=[public_sg.id], Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSG'}])
-    # Authorize ingress rules for the public security group
+    public_sg.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSG'}])
+
+    # Using ec2_client to authorize ingress rules
     ec2_client.authorize_security_group_ingress(
         GroupId=public_sg.id,
         IpPermissions=[
@@ -196,28 +197,31 @@ if not existing_public_sg:
             {'IpProtocol': 'tcp', 'FromPort': 443, 'ToPort': 443, 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},  # HTTPS
             {'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # NFS (EFS)
             {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # MySQL (RDS)
-    ])
+        ]
+    )
     print(f"Public Security Group created: {public_sg.id}")
 else:
     public_sg = existing_public_sg[0]
     print(f"Public Security Group already exists with ID: {public_sg.id}")
 
 # Check for existing private security group
-existing_private_sg = list(ec2_client.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSGPRIV']}]))
+existing_private_sg = list(ec2_resource.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': ['TESTSTACKSGPRIV']}]))
 if not existing_private_sg:
     private_sg = ec2_resource.create_security_group(
         GroupName='TESTSTACKSGPRIV',
         Description='Private Security Group for RDS and EFS',
         VpcId=vpc.id
     )
-    ec2_client.create_tags(Resources=[private_sg.id],Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSGPRIV'}])
-    # Authorize ingress rules for the private security group
+    private_sg.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSGPRIV'}])
+
+    # Using ec2_client to authorize ingress rules
     ec2_client.authorize_security_group_ingress(
         GroupId=private_sg.id,
         IpPermissions=[
             {'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # NFS (EFS)
             {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]},  # MySQL (RDS)
-    ])
+        ]
+    )
     print(f"Private Security Group created: {private_sg.id}")
 else:
     private_sg = existing_private_sg[0]
