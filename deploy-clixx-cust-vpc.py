@@ -632,23 +632,27 @@ fi
 user_data_base64 = base64.b64encode(user_data_script.encode('utf-8')).decode('utf-8')
 
 # --- Create Launch Template ---
-existing_lt_response = ec2_client.describe_launch_templates(LaunchTemplateNames=['CLiXX-LT'])
+#List all launch templates and check for 'CLiXX-LT'
+all_lt_response = ec2_client.describe_launch_templates()
+launch_template_names = [lt['LaunchTemplateName'] for lt in all_lt_response['LaunchTemplates']]
 
-if existing_lt_response['LaunchTemplates']:
-    launch_template_id = existing_lt_response['LaunchTemplates'][0]['LaunchTemplateId']
+if 'CLiXX-LT' in launch_template_names:
+    # Get the ID of the existing launch template
+    launch_template_id = next(lt['LaunchTemplateId'] for lt in all_lt_response['LaunchTemplates'] if lt['LaunchTemplateName'] == 'CLiXX-LT')
     print(f"Launch Template already exists with ID: {launch_template_id}")
 else:
+    # Create a new launch template since it doesn't exist
     launch_template = ec2_client.create_launch_template(
         LaunchTemplateName='CLiXX-LT',
         VersionDescription='Version 1',
         LaunchTemplateData={
-            'ImageId': ami_id,
-            'InstanceType': instance_type,
-            'KeyName': key_pair_name,
-            'SecurityGroupIds': [public_sg.id],
-            'UserData': user_data_base64,
+            'ImageId': ami_id,  
+            'InstanceType': instance_type,  
+            'KeyName': key_pair_name,  
+            'SecurityGroupIds': [public_sg.id],  
+            'UserData': user_data_base64,  
             'IamInstanceProfile': {
-                'Name': 'EFS_operations'  # Replace with your IAM role name
+                'Name': 'EFS_operations'  
             }
         }
     )
@@ -656,22 +660,25 @@ else:
     print(f"Launch Template created with ID: {launch_template_id}")
 
 # --- Create Auto Scaling Group ---
-existing_asg_response = autoscaling_client.describe_auto_scaling_groups(AutoScalingGroupNames=['CLiXX-ASG'])
+# List all Auto Scaling Groups and check for 'CLiXX-ASG'
+all_asg_response = autoscaling_client.describe_auto_scaling_groups()
+asg_names = [asg['AutoScalingGroupName'] for asg in all_asg_response['AutoScalingGroups']]
 
-if existing_asg_response['AutoScalingGroups']:
+if 'CLiXX-ASG' in asg_names:
     print("Auto Scaling Group already exists.")
 else:
+    # Create a new Auto Scaling Group since it doesn't exist
     autoscaling_client.create_auto_scaling_group(
         AutoScalingGroupName='CLiXX-ASG',
         LaunchTemplate={
-            'LaunchTemplateId': launch_template_id,
+            'LaunchTemplateId': launch_template_id, 
             'Version': '1'
         },
         MinSize=1,
         MaxSize=3,
         DesiredCapacity=1,
         VPCZoneIdentifier=f'{subnet_1.id},{subnet_2.id}',
-        TargetGroupARNs=[target_group_arn],
+        TargetGroupARNs=[target_group_arn], 
         Tags=[
             {
                 'Key': 'Name',
@@ -681,4 +688,3 @@ else:
         ]
     )
     print("Auto Scaling Group created successfully.")
-
