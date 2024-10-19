@@ -108,6 +108,7 @@ rds_client.restore_db_instance_from_db_snapshot(
     PubliclyAccessible=True
 )
 
+
 # Step 3: Create EFS file system
 efs_response = efs_client.create_file_system(
     CreationToken='CLiXX-EFS',
@@ -424,7 +425,7 @@ launch_template = ec2_client.create_launch_template(
         'SecurityGroupIds': [security_group_id],
         'UserData': user_data_base64,
         'IamInstanceProfile': {
-            'Name': 'EFS_operations'  # Replace with your IAM role name
+            'Name': 'EFS_operations' 
         }
     }
 )
