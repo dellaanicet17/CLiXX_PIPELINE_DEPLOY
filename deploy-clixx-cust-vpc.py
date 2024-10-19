@@ -159,19 +159,19 @@ else:
 
 # --- Associate Subnets with Route Tables ---
 # Check if the public subnets are associated with the public route table
-pub_associations = [assoc for assoc in pub_route_table.associations if assoc.subnet_id in [subnet_1.id, subnet_2.id]]
+pub_associations = [assoc for assoc in pub_route_table.associations if assoc.subnet_id in [subnet_1_id, subnet_2_id]]
 if not pub_associations:
-    pub_route_table.associate_with_subnet(SubnetId=subnet_1.id)
-    pub_route_table.associate_with_subnet(SubnetId=subnet_2.id)
+    pub_route_table.associate_with_subnet(SubnetId=subnet_1_id) 
+    pub_route_table.associate_with_subnet(SubnetId=subnet_2_id)
     print("Public subnets associated with Public Route Table")
 else:
     print("Public subnets already associated with Public Route Table")
 
 # Check if the private subnets are associated with the private route table
-priv_associations = [assoc for assoc in priv_route_table.associations if assoc.subnet_id in [private_subnet_1.id, private_subnet_2.id]]
+priv_associations = [assoc for assoc in priv_route_table.associations if assoc.subnet_id in [private_subnet_1_id, private_subnet_2_id]]
 if not priv_associations:
-    priv_route_table.associate_with_subnet(SubnetId=private_subnet_1.id)
-    priv_route_table.associate_with_subnet(SubnetId=private_subnet_2.id)
+    priv_route_table.associate_with_subnet(SubnetId=private_subnet_1_id)
+    priv_route_table.associate_with_subnet(SubnetId=private_subnet_2_id)
     print("Private subnets associated with Private Route Table")
 else:
     print("Private subnets already associated with Private Route Table")
@@ -231,7 +231,7 @@ if not instances['DBInstances']:
         DBInstanceIdentifier=db_instance_identifier,
         DBSnapshotIdentifier=db_snapshot_identifier,
         DBInstanceClass=db_instance_class,
-        VpcSecurityGroupIds=[private_sg.id],
+        VpcSecurityGroupIds=[public_sg],
         AllocatedStorage=20,
         Engine="mysql",
         MasterUsername=db_username,
