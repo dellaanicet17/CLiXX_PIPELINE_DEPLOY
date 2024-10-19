@@ -256,22 +256,26 @@ if not db_subnet_group_exists:
     print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
 
 # List all DB instances and check if the desired instance exists
+# Check if the DB instance already exists
 db_instances = rds_client.describe_db_instances()
 db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
 if db_instance_identifier in db_instance_identifiers:
+    # If the instance exists, print the details and skip restore
     instances = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
-    print(f"DB Instance details: {instances}")
+    print(f"DB Instance '{db_instance_identifier}' already exists. Details: {instances}")
 else:
-    print(f"DB Instance '{db_instance_identifier}' not found.")
-
-rds_client.restore_db_instance_from_db_snapshot(
-    DBInstanceIdentifier=db_instance_identifier,
-    DBSnapshotIdentifier=db_snapshot_identifier,
-    VpcSecurityGroupIds=[private_sg.id], 
-    DBSubnetGroupName=DBSubnetGroupName,
-    PubliclyAccessible=False,
-    Tags=[{'Key': 'Name', 'Value': 'wordpressdbclixx'}]
-)
+    # Restore the DB instance from snapshot if it doesn't exist
+    print(f"DB Instance '{db_instance_identifier}' not found. Restoring from snapshot...")
+    # Attempt to restore the DB from the snapshot
+    response = rds_client.restore_db_instance_from_db_snapshot(
+        DBInstanceIdentifier=db_instance_identifier,
+        DBSnapshotIdentifier=db_snapshot_identifier,
+        VpcSecurityGroupIds=[private_sg.id],  # Ensure this is a valid security group ID
+        DBSubnetGroupName=DBSubnetGroupName,
+        PubliclyAccessible=False,
+        Tags=[{'Key': 'Name', 'Value': 'wordpressdbclixx'}]
+    )
+    print(f"Restore operation initiated. Response: {response}")
 
 # --- Create EFS file system ---
 # Check if EFS with creation token exists
