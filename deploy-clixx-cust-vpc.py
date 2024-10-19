@@ -370,31 +370,36 @@ if target_group_arn is None:
 
 
 # --- Create Application Load Balancer ---
-existing_lb_response = elbv2_client.describe_load_balancers(Names=['CLiXX-LB'])
-if existing_lb_response['LoadBalancers']:
-    load_balancer_arn = existing_lb_response['LoadBalancers'][0]['LoadBalancerArn']
-    print(f"Load Balancer already exists with ARN: {load_balancer_arn}")
-else:
+# List all load balancers
+all_lb_response = elbv2_client.describe_load_balancers()
+load_balancers = all_lb_response['LoadBalancers']
+# Check if 'CLiXX-LB' exists in the list of load balancers
+load_balancer_arn = None
+for lb in load_balancers:
+    if lb['LoadBalancerName'] == 'CLiXX-LB':
+        load_balancer_arn = lb['LoadBalancerArn']
+        print(f"Load Balancer already exists with ARN: {load_balancer_arn}")
+        break
+if load_balancer_arn is None:
+    # Load balancer does not exist, create a new one
+    print("Load Balancer 'CLiXX-LB' not found. Creating a new load balancer.")
     load_balancer = elbv2_client.create_load_balancer(
         Name='CLiXX-LB',
-        Subnets=[subnet_1_id, subnet_2_id],
+        Subnets=[public_subnet_1_id, public_subnet_2_id],
         SecurityGroups=[public_sg.id],
         Scheme='internet-facing',
-        Type='application',
-        IpAddressType='ipv4',
-        Tags=[
-            {'Key': 'Name', 'Value': 'CLiXX-LB'},
-            {'Key': 'Environment', 'Value': 'dev'}
-        ]
+        Tags=[{'Key': 'Name', 'Value': 'CLiXX-LB'}]
     )
     load_balancer_arn = load_balancer['LoadBalancers'][0]['LoadBalancerArn']
     print(f"Load Balancer created with ARN: {load_balancer_arn}")
 
 #Create Listener for the Load Balancer (HTTP & HTTPS)
-# Check if HTTP listener exists
+# Retrieve listeners for the load balancer
 http_listener_response = elbv2_client.describe_listeners(LoadBalancerArn=load_balancer_arn)
-http_listener_exists = any(listener['Protocol'] == 'HTTP' for listener in http_listener_response['Listeners'])
+existing_listeners = http_listener_response['Listeners']
 
+# Check if HTTP listener exists
+http_listener_exists = any(listener['Protocol'] == 'HTTP' for listener in existing_listeners)
 if not http_listener_exists:
     elbv2_client.create_listener(
         LoadBalancerArn=load_balancer_arn,
@@ -407,7 +412,7 @@ else:
     print("HTTP Listener already exists.")
 
 # Check if HTTPS listener exists
-https_listener_exists = any(listener['Protocol'] == 'HTTPS' for listener in http_listener_response['Listeners'])
+https_listener_exists = any(listener['Protocol'] == 'HTTPS' for listener in existing_listeners)
 if not https_listener_exists:
     elbv2_client.create_listener(
         LoadBalancerArn=load_balancer_arn,
@@ -427,20 +432,20 @@ else:
 route53_response = route53_client.list_resource_record_sets(
     HostedZoneId=hosted_zone_id
 )
-
-record_exists = any(record['Name'] == f"{record_name}." for record in route53_response['ResourceRecordSets'])
+# Check if the record already exists using a broader approach
+record_exists = any(record['Name'] == record_name for record in route53_response['ResourceRecordSets'])
 if not record_exists:
     route53_client.change_resource_record_sets(
         HostedZoneId=hosted_zone_id,
         ChangeBatch={
-            'Comment': 'Create a record for the CLixx Load Balancer',
+            'Comment': 'Create a record for the CLiXX Load Balancer',
             'Changes': [{
                 'Action': 'CREATE',
                 'ResourceRecordSet': {
                     'Name': record_name,
                     'Type': 'A',
                     'AliasTarget': {
-                        'HostedZoneId': 'Z35SXDOTRQ7X7K',
+                        'HostedZoneId': 'Z35SXDOTRQ7X7K',  # Ensure this is the correct hosted zone ID for the load balancer
                         'DNSName': load_balancer['LoadBalancers'][0]['DNSName'],
                         'EvaluateTargetHealth': False
                     }
