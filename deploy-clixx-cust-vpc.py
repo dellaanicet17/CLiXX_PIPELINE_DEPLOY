@@ -344,11 +344,16 @@ efs_client.put_lifecycle_configuration(
 print(f"Lifecycle policy applied to EFS CLiXX-EFS")
 
 # --- Create Target Group ---
+# Describe target groups to check if 'CLiXX-TG' exists
 existing_tg_response = elbv2_client.describe_target_groups(Names=['CLiXX-TG'])
+
 if existing_tg_response['TargetGroups']:
+    # Target group already exists
     target_group_arn = existing_tg_response['TargetGroups'][0]['TargetGroupArn']
     print(f"Target Group already exists with ARN: {target_group_arn}")
 else:
+    # Target group does not exist, create a new one
+    print("Target Group 'CLiXX-TG' not found. Creating a new target group.")
     target_group = elbv2_client.create_target_group(
         Name='CLiXX-TG',
         Protocol='HTTP',
