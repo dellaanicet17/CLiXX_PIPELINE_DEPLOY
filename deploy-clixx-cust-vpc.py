@@ -270,6 +270,7 @@ else:
     response = rds_client.restore_db_instance_from_db_snapshot(
         DBInstanceIdentifier=db_instance_identifier,
         DBSnapshotIdentifier=db_snapshot_identifier,
+        DBInstanceClass=db_instance_class,
         VpcSecurityGroupIds=[private_sg.id],  # Ensure this is a valid security group ID
         DBSubnetGroupName=DBSubnetGroupName,
         PubliclyAccessible=False,
@@ -658,17 +659,17 @@ else:
             'ImageId': ami_id,  
             'InstanceType': instance_type,  
             'KeyName': key_pair_name,  
-            'SecurityGroupIds': [public_sg.id],  
+            #'SecurityGroupIds': [public_sg.id],  
             'UserData': user_data_base64,  
             'IamInstanceProfile': {
                 'Name': 'EFS_operations'  
-            }
-        #    'NetworkInterfaces': [{
-        #        'AssociatePublicIpAddress': True,
-        #        'DeviceIndex': 0,
-        #        'SubnetId': subnet_1_id,
-        #        'Groups': [public_sg.id]
-        #    }]
+            },
+            'NetworkInterfaces': [{
+                'AssociatePublicIpAddress': True,
+                'DeviceIndex': 0,
+                'SubnetId': subnet_1_id,
+                'Groups': [public_sg.id]
+            }]
         }
     )
     launch_template_id = launch_template['LaunchTemplate']['LaunchTemplateId']
