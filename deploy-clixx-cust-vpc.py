@@ -188,6 +188,7 @@ if not existing_public_sg:
     )
     public_sg.create_tags(Tags=[{'Key': 'Name', 'Value': 'TESTSTACKSG'}])
 
+    
     # Using ec2_client to authorize ingress rules
     ec2_client.authorize_security_group_ingress(
         GroupId=public_sg.id,
