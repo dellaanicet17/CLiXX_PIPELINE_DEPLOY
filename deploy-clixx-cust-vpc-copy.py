@@ -206,16 +206,21 @@ except Exception as e:
     print(f"An error occurred while restoring the DB instance: {str(e)}")
 
 # Step 8: Create EFS file system
-efs_response = efs_client.create_file_system(
-    CreationToken=efs_name,
-    PerformanceMode='generalPurpose', 
-    Encrypted=False,
-    ThroughputMode='bursting', 
-    Tags=[
-        {'Key': 'Name', 'Value': efs_name}
-    ]
+# Check if EFS with creation token exists
+efs_response = efs_client.describe_file_systems(
+    CreationToken='CLiXX-EFS'
 )
-file_system_id = efs_response['FileSystemId']
+
+# If it exists, proceed with the existing EFS
+if efs_response['FileSystems']:
+    file_system_id = efs_response['FileSystems'][0]['FileSystemId']
+else:
+    # Create EFS
+    efs_response = efs_client.create_file_system(
+        CreationToken='CLiXX-EFS',
+        PerformanceMode='generalPurpose'
+    )
+    file_system_id = efs_response['FileSystemId']
 
 # Wait until the EFS file system is in 'available' state
 while True:
@@ -521,7 +526,7 @@ launch_template = ec2_client.create_launch_template(
         'ImageId': ami_id,
         'InstanceType': instance_type,
         'KeyName': key_pair_name,
-        'SecurityGroupIds': [public_sgid],
+        'SecurityGroupIds': [public_sg.id],
         'UserData': user_data_base64,
         'IamInstanceProfile': {
             'Name': 'EFS_operations'  # Replace with your IAM role name

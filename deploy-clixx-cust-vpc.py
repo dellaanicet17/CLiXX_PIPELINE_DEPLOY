@@ -347,7 +347,6 @@ print(f"Lifecycle policy applied to EFS CLiXX-EFS")
 # List all target groups and filter for 'CLiXX-TG'
 all_tg_response = elbv2_client.describe_target_groups()
 target_groups = all_tg_response['TargetGroups']
-
 # Check if 'CLiXX-TG' exists in the list of target groups
 target_group_arn = None
 for tg in target_groups:
@@ -387,7 +386,17 @@ if load_balancer_arn is None:
         Subnets=[subnet_1_id, subnet_2_id],
         SecurityGroups=[public_sg.id],
         Scheme='internet-facing',
-        Tags=[{'Key': 'Name', 'Value': 'CLiXX-LB'}]
+        IpAddressType='ipv4',
+        Tags=[
+            {
+                'Key': 'Name',
+                'Value': 'CLiXX-LB'
+            },
+            {
+                'Key': 'Environment',
+                'Value': 'dev'
+            }
+        ]
     )
     load_balancer_arn = load_balancer['LoadBalancers'][0]['LoadBalancerArn']
     print(f"Load Balancer created with ARN: {load_balancer_arn}")
@@ -649,17 +658,17 @@ else:
             'ImageId': ami_id,  
             'InstanceType': instance_type,  
             'KeyName': key_pair_name,  
-            #'SecurityGroupIds': [public_sg.id],  
+            'SecurityGroupIds': [public_sg.id],  
             'UserData': user_data_base64,  
             'IamInstanceProfile': {
                 'Name': 'EFS_operations'  
-            },
-            'NetworkInterfaces': [{
-                'AssociatePublicIpAddress': True,
-                'DeviceIndex': 0,
-                'SubnetId': subnet_1_id,
-                'Groups': [public_sg.id]
-            }]
+            }
+        #    'NetworkInterfaces': [{
+        #        'AssociatePublicIpAddress': True,
+        #        'DeviceIndex': 0,
+        #        'SubnetId': subnet_1_id,
+        #        'Groups': [public_sg.id]
+        #    }]
         }
     )
     launch_template_id = launch_template['LaunchTemplate']['LaunchTemplateId']
@@ -682,13 +691,13 @@ else:
         MinSize=1,
         MaxSize=3,
         DesiredCapacity=1,
-        VPCZoneIdentifier=f'{subnet_1_id},{subnet_2_id}',
+        VPCZoneIdentifier=subnet_1_id,
         TargetGroupARNs=[target_group_arn], 
         Tags=[
             {
                 'Key': 'Name',
-                'Value': 'CLiXX',
-                'PropagateAtLaunch': True
+                'Value': 'CLiXX'
+                #'PropagateAtLaunch': True
             }
         ]
     )
