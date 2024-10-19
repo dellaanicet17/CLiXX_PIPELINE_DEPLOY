@@ -314,15 +314,16 @@ private_subnet_ids = [private_subnet_1_id, private_subnet_2_id]
 for private_subnet_id in private_subnet_ids:
     # Check if mount target already exists for the subnet
     mount_targets_response = efs_client.describe_mount_targets(
-        Filters=[{'Name': 'file-system-id', 'Values': [file_system_id]}]
+        FileSystemId=file_system_id  # Use FileSystemId to filter by file system
     )
+    # Extract the list of subnet IDs for existing mount targets
     existing_mount_targets = [mt['SubnetId'] for mt in mount_targets_response['MountTargets']]
-    
+    # If the current subnet does not have a mount target, create one
     if private_subnet_id not in existing_mount_targets:
         mount_target_response = efs_client.create_mount_target(
             FileSystemId=file_system_id,
             SubnetId=private_subnet_id,
-            SecurityGroups=[private_sg.id]
+            SecurityGroups=[private_sg.id]  # Assuming private_sg.id is correct
         )
         print(f"Mount target created in Private Subnet: {private_subnet_id}")
     else:
