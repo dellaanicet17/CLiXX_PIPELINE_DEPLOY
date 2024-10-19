@@ -310,7 +310,7 @@ while True:
         time.sleep(10)
 
 # After ensuring the file system is available, create the mount targets in the private subnets
-private_subnet_ids = [private_subnet_1['SubnetIdentifier'], private_subnet_2['SubnetIdentifier']]
+private_subnet_ids = [private_subnet_1_id, private_subnet_2_id]
 for private_subnet_id in private_subnet_ids:
     # Check if mount target already exists for the subnet
     mount_targets_response = efs_client.describe_mount_targets(
