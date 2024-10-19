@@ -663,7 +663,6 @@ else:
 # List all Auto Scaling Groups and check for 'CLiXX-ASG'
 all_asg_response = autoscaling_client.describe_auto_scaling_groups()
 asg_names = [asg['AutoScalingGroupName'] for asg in all_asg_response['AutoScalingGroups']]
-
 if 'CLiXX-ASG' in asg_names:
     print("Auto Scaling Group already exists.")
 else:
