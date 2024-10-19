@@ -250,6 +250,7 @@ rds_client.create_db_instance(
     MasterUserPassword=db_password,
 )
 
+
 # --- Create EFS file system ---
 # Check if EFS with creation token exists
 efs_response = efs_client.describe_file_systems(
