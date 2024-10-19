@@ -232,13 +232,20 @@ print(f"Security groups created: Public SG (ID: {public_sg.id}), Private SG (ID:
 # --- RDS Instance ---
 # Create or handle existing DB Subnet Group
 DBSubnetGroupName = 'TESTSTACKDBSUBNETGROUP'
-# Check if the DB Subnet Group already exists
-response = rds_client.describe_db_subnet_groups(DBSubnetGroupName=DBSubnetGroupName)
-if 'DBSubnetGroups' in response and len(response['DBSubnetGroups']) > 0:
-    DBSubnetGroupName = response['DBSubnetGroups'][0].get('DBSubnetGroupName', 'Unknown')
-    print(f"DB Subnet Group '{DBSubnetGroupName}' already exists. Proceeding with the existing one.")
-else:
-    # Create the DB Subnet Group if it does not exist
+# Attempt to describe the DB Subnet Group
+response = rds_client.describe_db_subnet_groups()
+# Flag to check if the subnet group exists
+db_subnet_group_exists = False
+# Loop through all subnet groups to find a match
+for subnet_group in response['DBSubnetGroups']:
+    if subnet_group['DBSubnetGroupName'] == DBSubnetGroupName:
+        db_subnet_group_exists = True
+        DBSubnetGroupName = subnet_group['DBSubnetGroupName']
+        print(f"DB Subnet Group '{DBSubnetGroupName}' already exists. Proceeding with the existing one.")
+        break
+
+# Create DB Subnet Group if it does not exist
+if not db_subnet_group_exists:
     response = rds_client.create_db_subnet_group(
         DBSubnetGroupName=DBSubnetGroupName,
         SubnetIds=[private_subnet_1_id, private_subnet_2_id],
@@ -247,7 +254,7 @@ else:
     )
     DBSubnetGroupName = response['DBSubnetGroup']['DBSubnetGroupName']
     print(f"DB Subnet Group '{DBSubnetGroupName}' created successfully.")
-
+    
 # List all DB instances and check if the desired instance exists
 db_instances = rds_client.describe_db_instances()
 db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
