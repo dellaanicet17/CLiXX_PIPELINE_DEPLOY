@@ -368,7 +368,6 @@ if target_group_arn is None:
     target_group_arn = target_group['TargetGroups'][0]['TargetGroupArn']
     print(f"Target Group created with ARN: {target_group_arn}")
 
-
 # --- Create Application Load Balancer ---
 # List all load balancers
 all_lb_response = elbv2_client.describe_load_balancers()
@@ -385,7 +384,7 @@ if load_balancer_arn is None:
     print("Load Balancer 'CLiXX-LB' not found. Creating a new load balancer.")
     load_balancer = elbv2_client.create_load_balancer(
         Name='CLiXX-LB',
-        Subnets=[public_subnet_1_id, public_subnet_2_id],
+        Subnets=[subnet_1_id, subnet_2_id],
         SecurityGroups=[public_sg.id],
         Scheme='internet-facing',
         Tags=[{'Key': 'Name', 'Value': 'CLiXX-LB'}]
