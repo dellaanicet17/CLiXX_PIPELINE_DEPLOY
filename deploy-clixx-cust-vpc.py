@@ -60,9 +60,9 @@ db_password = "W3lcome123"
 ami_id = "ami-00f251754ac5da7f0"
 instance_type = "t2.micro"
 key_pair_name = "stack_devops_kp"
-certificate_arn = "arn:aws:acm:us-east-1:043309319757:certificate/13c75e7c-517a-4a5e-b27c-b2fce2f442e1"
-hosted_zone_id = "Z04517273VCLIDX9UEQR7"
-record_name = "test.clixx-della.com"
+certificate_arn = "arn:aws:acm:us-east-1:043309319757:certificate/1e2f9427-2612-4811-9eb9-682ef736ad48"
+hosted_zone_id = "Z022607324NJ585R59I5F"
+record_name = "test.clixx-wdella.com"
 aws_region = "us-east-1"
 
 # --- VPC ---
@@ -428,7 +428,7 @@ if not https_listener_exists:
         Port=443,
         SslPolicy='ELBSecurityPolicy-2016-08',
         Certificates=[{
-            'CertificateArn': 'arn:aws:acm:us-east-1:043309319757:certificate/13c75e7c-517a-4a5e-b27c-b2fce2f442e1'
+            'CertificateArn': certificate_arn
         }],
         DefaultActions=[{'Type': 'forward', 'TargetGroupArn': target_group_arn}]
     )
@@ -453,7 +453,7 @@ if not record_exists:
                     'Name': record_name,
                     'Type': 'A',
                     'AliasTarget': {
-                        'HostedZoneId': 'Z35SXDOTRQ7X7K',
+                        'HostedZoneId': load_balancer['LoadBalancers'][0]['CanonicalHostedZoneId'],
                         'DNSName': load_balancer['LoadBalancers'][0]['DNSName'],
                         'EvaluateTargetHealth': False
                     }
