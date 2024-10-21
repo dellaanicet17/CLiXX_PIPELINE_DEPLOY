@@ -649,7 +649,6 @@ fi
 
 # Encode the user data to Base64
 user_data_base64 = base64.b64encode(user_data_script.encode('utf-8')).decode('utf-8')
-
 # --- Create Launch Template ---
 #List all launch templates and check for 'CLiXX-LT'
 all_lt_response = ec2_client.describe_launch_templates()
