@@ -14,7 +14,7 @@ phases:
       - echo starting build on `date`
       - echo "Creating CliXX Security Group for apps and database"
       - |
-          flag='deploy_clixx'  # Set flag value; make sure this is dynamically set as needed
+          flag='delete'  # Set flag value; make sure this is dynamically set as needed
 
           if [[ $flag == 'restore' ]]; then
             echo "Restoring DB instance from snapshot..."

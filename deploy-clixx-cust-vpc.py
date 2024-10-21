@@ -363,6 +363,16 @@ if target_group_arn is None:
         Port=80,
         VpcId=vpc.id,
         TargetType='instance'
+        HealthCheckProtocol='HTTP',
+        HealthCheckPort='traffic-port',
+        HealthCheckPath='/',
+        HealthCheckIntervalSeconds=120,  
+        HealthCheckTimeoutSeconds=30,    
+        HealthyThresholdCount=5,         
+        UnhealthyThresholdCount=4,       
+        Matcher={
+            'HttpCode': '200-399'        
+        }
     )
     target_group_arn = target_group['TargetGroups'][0]['TargetGroupArn']
     print(f"Target Group created with ARN: {target_group_arn}")
