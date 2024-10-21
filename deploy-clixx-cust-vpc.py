@@ -46,7 +46,6 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_session_token=credentials['SessionToken'])
 
 ###########################################################################
-
 # Variables
 vpc_cidr_block = "10.0.0.0/16"
 public_subnet_cidr_block_1 = "10.0.1.0/24"
@@ -54,10 +53,10 @@ public_subnet_cidr_block_2 = "10.0.2.0/24"
 private_subnet_cidr_block_1 = "10.0.3.0/24"
 private_subnet_cidr_block_2 = "10.0.4.0/24"
 db_instance_identifier = "Wordpressdbclixx"
-db_snapshot_identifier = "arn:aws:rds:us-east-1:577701061234:snapshot:wordpressdbclixx-ecs-snapshot"
+db_snapshot_identifier = "arn:aws:rds:us-east-1:043309319757:snapshot:wordpressdbclixx-ecs-snapshot-copy"
 db_instance_class = "db.m6gd.large"
 db_username = "wordpressuser"
-db_password = "password"
+db_password = "W3lcome123"
 ami_id = "ami-00f251754ac5da7f0"
 instance_type = "t2.micro"
 key_pair_name = "stack_devops_kp"
@@ -698,7 +697,7 @@ else:
             {
                 'Key': 'Name',
                 'Value': 'CLiXX'
-                #'PropagateAtLaunch': True
+                'PropagateAtLaunch': True
             }
         ]
     )
