@@ -362,7 +362,7 @@ if target_group_arn is None:
         Protocol='HTTP',
         Port=80,
         VpcId=vpc.id,
-        TargetType='instance'
+        TargetType='instance',
         HealthCheckProtocol='HTTP',
         HealthCheckPort='traffic-port',
         HealthCheckPath='/',
