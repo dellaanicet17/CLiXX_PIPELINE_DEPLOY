@@ -696,7 +696,7 @@ else:
         Tags=[
             {
                 'Key': 'Name',
-                'Value': 'CLiXX'
+                'Value': 'CLiXX',
                 'PropagateAtLaunch': True
             }
         ]
