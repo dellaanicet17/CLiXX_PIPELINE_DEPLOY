@@ -136,40 +136,26 @@ else:
 #################### Delete Target Group
 # Define your target group name
 tg_name = 'CLiXX-TG'
+# Remove the Target Group if it exists
+response = elbv2_client.describe_target_groups(Names=[tg_name])
+if response['TargetGroups']:
+    tg_arn = response['TargetGroups'][0]['TargetGroupArn']
 
-# Describe all target groups to find the one with the specified name
-target_groups = elbv2_client.describe_target_groups()
-tg_arn = None
-
-# Loop through target groups and find the one with the matching name
-for tg in target_groups['TargetGroups']:
-    if tg['TargetGroupName'] == tg_name:
-        tg_arn = tg['TargetGroupArn']
-        print(f"Found target group: {tg_name} (ARN: {tg_arn})")
-        break
-
-if tg_arn:
-    # Describe all listeners to find any using the target group
-    listeners = elbv2_client.describe_listeners(LoadBalancerArn=lb_arn)
-    # Flag to check if any listener is using the target group
-    listener_in_use = False
-    for listener in listeners['Listeners']:
-        if 'DefaultActions' in listener:
-            for action in listener['DefaultActions']:
-                if action['Type'] == 'forward' and action['TargetGroupArn'] == tg_arn:
-                    listener_in_use = True
-                    print(f"Listener {listener['ListenerArn']} is using the target group. Removing it...")
-                    # Remove the listener
-                    elbv2_client.delete_listener(ListenerArn=listener['ListenerArn'])
-                    print(f"Listener {listener['ListenerArn']} deleted.")
-    if not listener_in_use:
-        print(f"No listeners are using the target group {tg_name}.")
-
-    # Now delete the target group
+    # Delete the Target Group
     elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
     print(f"Target Group '{tg_name}' deleted.")
+
+    # Wait for the target group to be deleted
+    while True:
+        response = elbv2_client.describe_target_groups(TargetGroupArns=[tg_arn])
+        if not response['TargetGroups']:
+            print(f"Target group '{tg_arn}' has been successfully deleted.")
+            break
+        else:
+            print(f"Waiting for target group '{tg_arn}' to be deleted...")
+            time.sleep(5)
 else:
-    print(f"Target Group '{tg_name}' not found.")
+    print(f"Target group '{tg_name}' does not exist.")
 
 ################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
