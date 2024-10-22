@@ -46,12 +46,36 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_session_token=credentials['SessionToken'])
 
 ##################### Delete the DB instance
-response = rds_client.delete_db_instance(
-    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
-    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
-   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
-)
-print("DB Instance deletion initiated:", response)
+# Step 1: Check for and delete RDS instance
+db_instance_name = 'wordpressdbclixx'
+rds_instances = rds_client.describe_db_instances()
+db_instance_exists = any(instance['DBInstanceIdentifier'] == db_instance_name for instance in rds_instances['DBInstances'])
+
+if db_instance_exists:
+    rds_client.delete_db_instance(
+        DBInstanceIdentifier=db_instance_name,
+        SkipFinalSnapshot=True
+    )
+    print(f"RDS instance '{db_instance_name}' deletion initiated.")
+else:
+    print(f"RDS instance '{db_instance_name}' not found.")
+
+# Step 2: Wait for RDS instance deletion
+while db_instance_exists:
+    rds_instances = rds_client.describe_db_instances()
+    db_instance_exists = any(instance['DBInstanceIdentifier'] == db_instance_name for instance in rds_instances['DBInstances'])
+    if not db_instance_exists:
+        print(f"RDS instance '{db_instance_name}' deleted successfully.")
+    else:
+        print(f"Waiting for RDS instance '{db_instance_name}' to be deleted...")
+        time.sleep(10)
+
+#response = rds_client.delete_db_instance(
+#    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
+#    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
+#   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
+#)
+#print("DB Instance deletion initiated:", response)
 
 ################### Delete Application Load Balancer
 # Name of the load balancer to delete
