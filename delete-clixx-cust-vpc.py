@@ -135,16 +135,16 @@ else:
 
 #################### Delete Target Group
 # Define your target group name
-tg_name = 'CLiXX-TG'
+#tg_name = 'CLiXX-TG'
 
 # Describe all target groups to find the one with the specified name
-target_groups = elbv2_client.describe_target_groups()
-tg_arn = None
+#target_groups = elbv2_client.describe_target_groups()
+#tg_arn = None
 
 # Loop through target groups and find the one with the matching name
-for tg in target_groups['TargetGroups']:
-    if tg['TargetGroupName'] == tg_name:
-        tg_arn = tg['TargetGroupArn']
+#for tg in target_groups['TargetGroups']:
+#    if tg['TargetGroupName'] == tg_name:
+#        tg_arn = tg['TargetGroupArn']
 #        print(f"Found target group: {tg_name} (ARN: {tg_arn})")
 #        break
 
@@ -166,75 +166,34 @@ for tg in target_groups['TargetGroups']:
 #        print(f"No listeners are using the target group {tg_name}.")
 
     # Now delete the target group
-    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
-    print(f"Target Group '{tg_name}' deleted.")
-else:
-    print(f"Target Group '{tg_name}' not found.")
+#    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
+#    print(f"Target Group '{tg_name}' deleted.")
+#else:
+#    print(f"Target Group '{tg_name}' not found.")
 
 ################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
 hosted_zone_id = 'Z022607324NJ585R59I5F'
-record_name = 'test.clixx-wdella.com.'
+record_name = 'test.clixx-wdella.com'
 
-# Fetch the record sets for the specified hosted zone
-response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
-# Find the record you want to delete
-record_sets = response['ResourceRecordSets']
-record_value = None
-
-for record in response['ResourceRecordSets']:
-    if 'ResourceRecords' in record:
-        # Safely access the record value if 'ResourceRecords' exists
-        record_value = record['ResourceRecords'][0]['Value']
-        print(f"Found record with value: {record_value}")
-        # Add your logic for deleting the record or taking action
-    else:
-        # Handle the case for records like ALIAS
-        print(f"Record '{record['Name']}' does not have 'ResourceRecords'. It may be an Alias or another special type.")
-        # Add logic to handle records without 'ResourceRecords', e.g., Alias records
-        if 'AliasTarget' in record:
-            print(f"Alias record pointing to {record['AliasTarget']['DNSName']}")
-            # Add logic to handle AliasTarget if needed
-
-# Check if the record exists and retrieve its value
-for record in record_sets:
-    if record['Name'] == record_name:
-        record_value = record['ResourceRecords'][0]['Value']
-        break
-
-# If the record exists, proceed to delete it
-if record_value:
-    print(f"Deleting record: {record_name} with value: {record_value}")
-
-    delete_response = route53_client.change_resource_record_sets(
-        HostedZoneId=hosted_zone_id,
-        ChangeBatch={
-            'Changes': [
-                {
-                    'Action': 'DELETE',
-                    'ResourceRecordSet': {
-                        'Name': record_name,
-                        'Type': 'A',
-                        'TTL': 300,
-                        'ResourceRecords': [{'Value': record_value}],
-                    }
+delete_response = route53_client.change_resource_record_sets(
+    HostedZoneId=hosted_zone_id,
+    ChangeBatch={
+        'Changes': [
+            {
+                'Action': 'DELETE',
+                'ResourceRecordSet': {
+                    'Name': record_name,
+                    'Type': 'A',
+                    'TTL': 300,
+                    #'ResourceRecords': [{'Value': record_value}],
                 }
-            ]
-        }
-    )
+            }
+        ]
+    }
+)
+print(f"Record {record_name} has been successfully deleted.")
 
-    # Check the status of the deletion request
-    change_id = delete_response['ChangeInfo']['Id']
-    change_status = route53_client.get_change(Id=change_id)['ChangeInfo']['Status']
-
-    # Print the status until the deletion is fully completed
-    if change_status == 'PENDING':
-        print(f"Record deletion for {record_name} initiated. Waiting for confirmation...")
-
-    elif change_status == 'INSYNC':
-        print(f"Record {record_name} has been successfully deleted.")
-else:
-    print(f"Record {record_name} does not exist.")
 
 #################### Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
