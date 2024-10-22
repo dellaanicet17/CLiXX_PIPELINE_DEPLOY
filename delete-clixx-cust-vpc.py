@@ -320,7 +320,7 @@ else:
 
 #################### Fetch and Delete DB Subnet Group
 # DB Subnet Group Name
-DBSubnetGroupName = 'TESTSTACKDBSUBNETGROUP'
+DBSubnetGroupName = 'teststackdbsubnetgroup'
 # --- Check if DB Subnet Group Exists ---
 response = rds_client.describe_db_subnet_groups()
 # Flag to check if the subnet group exists
