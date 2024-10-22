@@ -70,13 +70,6 @@ while db_instance_exists:
         print(f"Waiting for RDS instance '{db_instance_name}' to be deleted...")
         time.sleep(10)
 
-#response = rds_client.delete_db_instance(
-#    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
-#    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
-#   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
-#)
-#print("DB Instance deletion initiated:", response)
-
 ################### Delete Application Load Balancer
 # Name of the load balancer to delete
 lb_name = 'CLiXX-LB'
@@ -146,14 +139,14 @@ if response['TargetGroups']:
     print(f"Target Group '{tg_name}' deleted.")
 
     # Wait for the target group to be deleted
-    while True:
-        response = elbv2_client.describe_target_groups(TargetGroupArns=[tg_arn])
-        if not response['TargetGroups']:
-            print(f"Target group '{tg_arn}' has been successfully deleted.")
-            break
-        else:
-            print(f"Waiting for target group '{tg_arn}' to be deleted...")
-            time.sleep(5)
+    #while True:
+    #    response = elbv2_client.describe_target_groups(TargetGroupArns=[tg_arn])
+    #    if not response['TargetGroups']:
+    #        print(f"Target group '{tg_arn}' has been successfully deleted.")
+    #        break
+    #    else:
+    #        print(f"Waiting for target group '{tg_arn}' to be deleted...")
+    #        time.sleep(5)
 else:
     print(f"Target group '{tg_name}' does not exist.")
 
