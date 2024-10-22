@@ -190,7 +190,7 @@ for record in route53_response['ResourceRecordSets']:
             print(f"Record '{record['Name']}' does not have 'ResourceRecords' or 'AliasTarget'.")
         break  # Exit after finding and deleting the record
 else:
-    print(f"Record '{record_name}' not found.")
+    print(f"Record '{record_name}' deleted.")
 
 #################### Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
