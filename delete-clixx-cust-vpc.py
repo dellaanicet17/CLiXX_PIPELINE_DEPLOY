@@ -130,13 +130,13 @@ else:
 # Define your target group name
 tg_name = 'CLiXX-TG'
 # Remove the Target Group if it exists
-#response = elbv2_client.describe_target_groups(Names=[tg_name])
-#if response['TargetGroups']:
-#    tg_arn = response['TargetGroups'][0]['TargetGroupArn']
+response = elbv2_client.describe_target_groups(Names=[tg_name])
+if response['TargetGroups']:
+    tg_arn = response['TargetGroups'][0]['TargetGroupArn']
 
     # Delete the Target Group
-#    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
-#    print(f"Target Group '{tg_name}' deleted.")
+    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
+    print(f"Target Group '{tg_name}' deleted.")
 
     # Wait for the target group to be deleted
     #while True:
@@ -147,8 +147,8 @@ tg_name = 'CLiXX-TG'
     #    else:
     #        print(f"Waiting for target group '{tg_arn}' to be deleted...")
     #        time.sleep(5)
-#else:
-#    print(f"Target group '{tg_name}' does not exist.")
+else:
+    print(f"Target group '{tg_name}' does not exist.")
 
 ################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
@@ -207,40 +207,15 @@ for record in route53_response['ResourceRecordSets']:
 else:
     print(f"Record '{record_name}' not found.")
 
-#delete_response = route53_client.change_resource_record_sets(
-#    HostedZoneId=hosted_zone_id,
-#    ChangeBatch={
-#        'Changes': [
-#            {
-#                'Action': 'DELETE',
-#                'ResourceRecordSet': {
-#                    'Name': record_name,
-#                    'Type': 'A',
-#                    'TTL': 300,
-#                    'ResourceRecords': [
-#                        {
-#                            'Value': lb_arn
-#                        }
-#                    ]
-#                }
-#            }
-#        ]
-#    }
-#)
-#print(f"Record {record_name} has been successfully deleted.")
-
-
 #################### Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
 autoscaling_group_name = 'CLiXX-ASG'
-
 # Delete the Auto Scaling Group
 response = autoscaling_client.delete_auto_scaling_group(
     AutoScalingGroupName=autoscaling_group_name,
     ForceDelete=True  
 )
 print("Auto Scaling Group deleted:", response)
-
 # Check if the Auto Scaling Group is deleted
 while True:
     time.sleep(120)  # Wait for a few seconds
@@ -254,15 +229,12 @@ while True:
 #################### Delete Launch Template
 # Specify the Launch Template Name
 launch_template_name = 'CLiXX-LT'
-
 # Get the Launch Template ID based on the Launch Template Name
 response = ec2_client.describe_launch_templates(
     Filters=[{'Name': 'launch-template-name', 'Values': [launch_template_name]}]
 )
-
 # Extract the Launch Template ID
 launch_template_id = response['LaunchTemplates'][0]['LaunchTemplateId']
-
 # Delete the Launch Template
 delete_response = ec2_client.delete_launch_template(
     LaunchTemplateId=launch_template_id
@@ -369,3 +341,27 @@ if db_subnet_group_exists:
         print(f"DB Subnet Group '{DBSubnetGroupName}' deleted successfully.")
 else:
     print(f"DB Subnet Group '{DBSubnetGroupName}' not found.")
+
+#################### Delete the VPC 
+# Specify the CIDR block and VPC name
+vpc_cidr_block = '10.0.0.0/16'
+vpc_name = 'TESTSTACKVPC'
+
+# Fetch the VPC by CIDR block and VPC name
+vpcs = ec2_client.describe_vpcs(
+    Filters=[
+        {'Name': 'cidr', 'Values': [vpc_cidr_block]},
+        {'Name': 'tag:Name', 'Values': [vpc_name]}
+    ]
+)
+
+if vpcs['Vpcs']:
+    # Get the VPC ID
+    vpc_id = vpcs['Vpcs'][0]['VpcId']
+    print(f"VPC found: {vpc_id} with Name '{vpc_name}'. Deleting...")
+
+    # Delete the VPC
+    ec2_client.delete_vpc(VpcId=vpc_id)
+    print(f"VPC {vpc_id} with Name '{vpc_name}' deleted.")
+else:
+    print(f"No VPC found with CIDR block {vpc_cidr_block} and Name '{vpc_name}'")
