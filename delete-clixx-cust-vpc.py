@@ -134,17 +134,17 @@ else:
     print(f"Deleted EFS with File System ID: {file_system_id}")
 
 #################### Delete Target Group
-# Define your target group name
-#tg_name = 'CLiXX-TG'
+ Define your target group name
+tg_name = 'CLiXX-TG'
 
 # Describe all target groups to find the one with the specified name
-#target_groups = elbv2_client.describe_target_groups()
-#tg_arn = None
+target_groups = elbv2_client.describe_target_groups()
+tg_arn = None
 
 # Loop through target groups and find the one with the matching name
-#for tg in target_groups['TargetGroups']:
-#    if tg['TargetGroupName'] == tg_name:
-#        tg_arn = tg['TargetGroupArn']
+for tg in target_groups['TargetGroups']:
+    if tg['TargetGroupName'] == tg_name:
+        tg_arn = tg['TargetGroupArn']
 #        print(f"Found target group: {tg_name} (ARN: {tg_arn})")
 #        break
 
@@ -166,10 +166,10 @@ else:
 #        print(f"No listeners are using the target group {tg_name}.")
 
     # Now delete the target group
-#    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
-#    print(f"Target Group '{tg_name}' deleted.")
-#else:
-#    print(f"Target Group '{tg_name}' not found.")
+    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
+    print(f"Target Group '{tg_name}' deleted.")
+else:
+    print(f"Target Group '{tg_name}' not found.")
 
 ################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
@@ -181,6 +181,20 @@ response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
 # Find the record you want to delete
 record_sets = response['ResourceRecordSets']
 record_value = None
+
+for record in response['ResourceRecordSets']:
+    if 'ResourceRecords' in record:
+        # Safely access the record value if 'ResourceRecords' exists
+        record_value = record['ResourceRecords'][0]['Value']
+        print(f"Found record with value: {record_value}")
+        # Add your logic for deleting the record or taking action
+    else:
+        # Handle the case for records like ALIAS
+        print(f"Record '{record['Name']}' does not have 'ResourceRecords'. It may be an Alias or another special type.")
+        # Add logic to handle records without 'ResourceRecords', e.g., Alias records
+        if 'AliasTarget' in record:
+            print(f"Alias record pointing to {record['AliasTarget']['DNSName']}")
+            # Add logic to handle AliasTarget if needed
 
 # Check if the record exists and retrieve its value
 for record in record_sets:
