@@ -70,12 +70,12 @@ while db_instance_exists:
         print(f"Waiting for RDS instance '{db_instance_name}' to be deleted...")
         time.sleep(10)
 
-response = rds_client.delete_db_instance(
-    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
-    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
-   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
-)
-print("DB Instance deletion initiated:", response)
+#response = rds_client.delete_db_instance(
+#    DBInstanceIdentifier='wordpressdbclixx',  # Replace with your DB instance identifier
+#    SkipFinalSnapshot=True,  # Set to False if you want to create a final snapshot before deletion
+#   DeleteAutomatedBackups=True  # Optional, deletes all automated backups
+#)
+#print("DB Instance deletion initiated:", response)
 
 ################### Delete Application Load Balancer
 # Name of the load balancer to delete
