@@ -113,6 +113,20 @@ else:
 # Name of the target group to delete
 tg_name = 'CLiXX-TG'
 
+# Check if the load balancer still exists
+load_balancers = elbv2_client.describe_load_balancers()['LoadBalancers']
+elb_exists = any(lb['LoadBalancerName'] == lb_name for lb in load_balancers)
+
+# Wait for ELB deletion to complete
+while elb_exists:
+    print(f"Waiting for ELB '{lb_name}' to be deleted...")
+    time.sleep(20)  # Polling interval (in seconds)
+
+    # Recheck the existence of the load balancer
+    load_balancers = elbv2_client.describe_load_balancers()['LoadBalancers']
+    elb_exists = any(lb['LoadBalancerName'] == lb_name for lb in load_balancers)
+print(f"ELB '{lb_name}' has been deleted.")
+
 # Describe all target groups to find the one with the specified name
 target_groups = elbv2_client.describe_target_groups()
 
@@ -128,48 +142,54 @@ for tg in target_groups['TargetGroups']:
 
 ################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
-hosted_zone_id = 'Z04517273VCLIDX9UEQR7'
-record_name = 'test.clixx-della.com'
+hosted_zone_id = 'Z022607324NJ585R59I5F'
+record_name = 'test.clixx-wdella.com.'
 
-try:
-    # Fetch the record sets
-    response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+# Fetch the record sets for the specified hosted zone
+response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+# Find the record you want to delete
+record_sets = response['ResourceRecordSets']
+record_value = None
 
-    # Find the record you want to delete
-    record_sets = response['ResourceRecordSets']
-    
-    # Check if the record exists and retrieve the value
-    record_value = None
-    for record in record_sets:
-        if record['Name'] == record_name + '.':  # Note the trailing dot
-            record_value = record['ResourceRecords'][0]['Value']
-            break
+# Check if the record exists and retrieve its value
+for record in record_sets:
+    if record['Name'] == record_name:
+        record_value = record['ResourceRecords'][0]['Value']
+        break
 
-    if record_value:
-        # Now proceed to delete the record
-        print(f"Deleting record: {record_name} with value: {record_value}")
-        route53_client.change_resource_record_sets(
-            HostedZoneId=hosted_zone_id,
-            ChangeBatch={
-                'Changes': [
-                    {
-                        'Action': 'DELETE',
-                        'ResourceRecordSet': {
-                            'Name': record_name,
-                            'Type': 'A',  # Adjust if the record type is different
-                            'TTL': 300,  # Use the TTL that matches the existing record
-                            'ResourceRecords': [{'Value': record_value}],
-                        }
+# If the record exists, proceed to delete it
+if record_value:
+    print(f"Deleting record: {record_name} with value: {record_value}")
+
+    delete_response = route53_client.change_resource_record_sets(
+        HostedZoneId=hosted_zone_id,
+        ChangeBatch={
+            'Changes': [
+                {
+                    'Action': 'DELETE',
+                    'ResourceRecordSet': {
+                        'Name': record_name,
+                        'Type': 'A',
+                        'TTL': 300,
+                        'ResourceRecords': [{'Value': record_value}],
                     }
-                ]
-            }
-        )
-        print(f"Deleted record: {record_name}")
-    else:
-        print(f"Record {record_name} does not exist.")
+                }
+            ]
+        }
+    )
 
-except Exception as e:
-    print(f"Error: {str(e)}")
+    # Check the status of the deletion request
+    change_id = delete_response['ChangeInfo']['Id']
+    change_status = route53_client.get_change(Id=change_id)['ChangeInfo']['Status']
+
+    # Print the status until the deletion is fully completed
+    if change_status == 'PENDING':
+        print(f"Record deletion for {record_name} initiated. Waiting for confirmation...")
+
+    elif change_status == 'INSYNC':
+        print(f"Record {record_name} has been successfully deleted.")
+else:
+    print(f"Record {record_name} does not exist.")
 
 #################### Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
@@ -178,7 +198,7 @@ autoscaling_group_name = 'CLiXX-ASG'
 # Delete the Auto Scaling Group
 response = autoscaling_client.delete_auto_scaling_group(
     AutoScalingGroupName=autoscaling_group_name,
-    ForceDelete=True  # Forces deletion even if there are instances running
+    ForceDelete=True  
 )
 print("Auto Scaling Group deleted:", response)
 
@@ -211,25 +231,102 @@ delete_response = ec2_client.delete_launch_template(
 print("Launch Template deleted:", delete_response)
 
 #################### Fetch and Delete Security Group
-# Fetch security group by name
-sg_name = 'Test_Stack_Web_DMZ'  # Replace with your security group name
+# Security Group Names
+public_sg_name = 'TESTSTACKSG'
+private_sg_name = 'TESTSTACKSGPRIV'
+# ---- Deleting Public Security Group ----
+# Fetch the public security group by name
+public_sg = list(ec2_resource.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': [public_sg_name]}]))
+if public_sg:
+    public_sg_id = public_sg[0].id
 
-# Describe all security groups
-security_groups = ec2_client.describe_security_groups(
-    Filters=[{'Name': 'group-name', 'Values': [sg_name]}]
-)
-
-# Fetch the security group ID
-if security_groups['SecurityGroups']:
-    security_group_id = security_groups['SecurityGroups'][0]['GroupId']
-    print(f"Found Security Group with ID: {security_group_id}")
-    
-    # Check if the Auto Scaling Group is deleted before proceeding
-    if 'AutoScalingGroupName' in locals() and not asg_status['AutoScalingGroups']:
-        response = ec2_client.delete_security_group(
-            GroupId=security_group_id
-        )
-        print("Security Group deleted:", response)
+    # Describe instances using the public security group
+    public_instances = ec2_client.describe_instances(Filters=[{'Name': 'instance.group-id', 'Values': [public_sg_id]}])
+    if public_instances['Reservations']:
+        print(f"Cannot delete Security Group '{public_sg_name}' (ID: {public_sg_id}). Instances are still using this SG.")
+    else:
+        # Describe Network Interfaces (ENIs) attached to this security group
+        public_enis = ec2_client.describe_network_interfaces(Filters=[{'Name': 'group-id', 'Values': [public_sg_id]}])
+        if public_enis['NetworkInterfaces']:
+            print(f"Cannot delete Security Group '{public_sg_name}' (ID: {public_sg_id}). Network Interfaces (ENIs) are still using this SG.")
+        else:
+            # No dependencies found, proceed to delete the security group
+            print(f"Deleting Security Group: {public_sg_name} (ID: {public_sg_id})")
+            ec2_client.delete_security_group(GroupId=public_sg_id)
+            print(f"Security Group '{public_sg_name}' (ID: {public_sg_id}) deleted successfully.")
 else:
-    print(f"Security Group '{sg_name}' not found.")
+    print(f"Security Group '{public_sg_name}' not found.")
+# ---- Deleting Private Security Group ----
+# Fetch the private security group by name
+private_sg = list(ec2_resource.security_groups.filter(Filters=[{'Name': 'group-name', 'Values': [private_sg_name]}]))
+if private_sg:
+    private_sg_id = private_sg[0].id
 
+    # Describe instances using the private security group
+    private_instances = ec2_client.describe_instances(Filters=[{'Name': 'instance.group-id', 'Values': [private_sg_id]}])
+    if private_instances['Reservations']:
+        print(f"Cannot delete Security Group '{private_sg_name}' (ID: {private_sg_id}). Instances are still using this SG.")
+    else:
+        # Describe Network Interfaces (ENIs) attached to this security group
+        private_enis = ec2_client.describe_network_interfaces(Filters=[{'Name': 'group-id', 'Values': [private_sg_id]}])
+        if private_enis['NetworkInterfaces']:
+            print(f"Cannot delete Security Group '{private_sg_name}' (ID: {private_sg_id}). Network Interfaces (ENIs) are still using this SG.")
+        else:
+            # No dependencies found, proceed to delete the security group
+            print(f"Deleting Security Group: {private_sg_name} (ID: {private_sg_id})")
+            ec2_client.delete_security_group(GroupId=private_sg_id)
+            print(f"Security Group '{private_sg_name}' (ID: {private_sg_id}) deleted successfully.")
+else:
+    print(f"Security Group '{private_sg_name}' not found.")
+
+#################### Fetch and Delete DB Subnet Group
+# DB Subnet Group Name
+DBSubnetGroupName = 'TESTSTACKDBSUBNETGROUP'
+# --- Check if DB Subnet Group Exists ---
+response = rds_client.describe_db_subnet_groups()
+# Flag to check if the subnet group exists
+db_subnet_group_exists = False
+# Loop through all subnet groups to find a match
+for subnet_group in response['DBSubnetGroups']:
+    if subnet_group['DBSubnetGroupName'] == DBSubnetGroupName:
+        db_subnet_group_exists = True
+        print(f"DB Subnet Group '{DBSubnetGroupName}' found. Proceeding with checks.")
+        break
+# --- Delete DB Subnet Group if it exists ---
+if db_subnet_group_exists:
+    # Check if any databases are associated with the subnet group
+    dbs_response = rds_client.describe_db_instances()
+    dbs_using_subnet_group = []
+    
+    # Check all databases to find if they are using the DB Subnet Group
+    for db_instance in dbs_response['DBInstances']:
+        if db_instance['DBSubnetGroup']['DBSubnetGroupName'] == DBSubnetGroupName:
+            dbs_using_subnet_group.append(db_instance['DBInstanceIdentifier'])
+    if dbs_using_subnet_group:
+        print(f"Databases using the subnet group: {dbs_using_subnet_group}. Waiting for deletion...")
+        # Wait until all databases are deleted
+        for db_instance_id in dbs_using_subnet_group:
+            while True:
+                try:
+                    db_instance_status = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_id)
+                    status = db_instance_status['DBInstances'][0]['DBInstanceStatus']
+                    if status == 'deleting':
+                        print(f"Database '{db_instance_id}' is still being deleted. Waiting...")
+                    else:
+                        print(f"Database '{db_instance_id}' has status: {status}")
+                    time.sleep(30)  # Wait for 30 seconds before checking again
+                except rds_client.exceptions.DBInstanceNotFoundFault:
+                    print(f"Database '{db_instance_id}' deleted successfully.")
+                    break
+
+        # Once all databases are deleted, proceed to delete the DB Subnet Group
+        print(f"All databases deleted. Proceeding to delete DB Subnet Group '{DBSubnetGroupName}'.")
+        rds_client.delete_db_subnet_group(DBSubnetGroupName=DBSubnetGroupName)
+        print(f"DB Subnet Group '{DBSubnetGroupName}' deleted successfully.")
+    else:
+        # No databases are using the subnet group, safe to delete
+        print(f"No databases found using DB Subnet Group '{DBSubnetGroupName}'. Proceeding to delete.")
+        rds_client.delete_db_subnet_group(DBSubnetGroupName=DBSubnetGroupName)
+        print(f"DB Subnet Group '{DBSubnetGroupName}' deleted successfully.")
+else:
+    print(f"DB Subnet Group '{DBSubnetGroupName}' not found.")
