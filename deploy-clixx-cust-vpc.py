@@ -309,6 +309,9 @@ while True:
         print(f"EFS is in '{lifecycle_state}' state. Waiting for it to become available...")
         time.sleep(10)
 
+# Add a tag to the EFS file system
+efs_client.create_tags(FileSystemId=file_system_id, Tags=[{'Key': 'Name', 'Value': 'CLiXX-EFS'}])
+
 # After ensuring the file system is available, create the mount targets in the private subnets
 private_subnet_ids = [private_subnet_1_id, private_subnet_2_id]
 for private_subnet_id in private_subnet_ids:
