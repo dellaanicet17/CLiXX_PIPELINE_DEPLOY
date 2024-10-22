@@ -48,6 +48,7 @@ phases:
             echo "Invalid option. Please set the flag correctly."
           fi
 
+
   post_build:
     commands:
       - echo Build completed on `date`
