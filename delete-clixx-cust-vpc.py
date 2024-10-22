@@ -44,13 +44,12 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_access_key_id=credentials['AccessKeyId'], 
                                   aws_secret_access_key=credentials['SecretAccessKey'], 
                                   aws_session_token=credentials['SessionToken'])
-'''
+
 ##################### Delete the DB instance
 # Step 1: Check for and delete RDS instance
 db_instance_name = 'wordpressdbclixx'
 rds_instances = rds_client.describe_db_instances()
 db_instance_exists = any(instance['DBInstanceIdentifier'] == db_instance_name for instance in rds_instances['DBInstances'])
-
 if db_instance_exists:
     rds_client.delete_db_instance(
         DBInstanceIdentifier=db_instance_name,
@@ -73,10 +72,8 @@ while db_instance_exists:
 ################### Delete Application Load Balancer
 # Name of the load balancer to delete
 lb_name = 'CLiXX-LB'
-
 # Describe all load balancers to find the one with the specified name
 load_balancers = elbv2_client.describe_load_balancers()
-
 # Loop through load balancers and find the one with the matching name
 for lb in load_balancers['LoadBalancers']:
     if lb['LoadBalancerName'] == lb_name:
@@ -133,20 +130,9 @@ tg_name = 'CLiXX-TG'
 response = elbv2_client.describe_target_groups(Names=[tg_name])
 if response['TargetGroups']:
     tg_arn = response['TargetGroups'][0]['TargetGroupArn']
-
     # Delete the Target Group
     elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
     print(f"Target Group '{tg_name}' deleted.")
-
-    # Wait for the target group to be deleted
-    #while True:
-    #    response = elbv2_client.describe_target_groups(TargetGroupArns=[tg_arn])
-    #    if not response['TargetGroups']:
-    #        print(f"Target group '{tg_arn}' has been successfully deleted.")
-    #        break
-    #    else:
-    #        print(f"Waiting for target group '{tg_arn}' to be deleted...")
-    #        time.sleep(5)
 else:
     print(f"Target group '{tg_name}' does not exist.")
 
@@ -154,7 +140,6 @@ else:
 # Specify your Hosted Zone ID and the record name
 hosted_zone_id = 'Z022607324NJ585R59I5F'
 record_name = 'test.clixx-wdella.com'
-
 # --- Route 53 Record Deletion ---
 route53_response = route53_client.list_resource_record_sets(
     HostedZoneId=hosted_zone_id
@@ -341,12 +326,11 @@ if db_subnet_group_exists:
         print(f"DB Subnet Group '{DBSubnetGroupName}' deleted successfully.")
 else:
     print(f"DB Subnet Group '{DBSubnetGroupName}' not found.")
-'''
+
 #################### Delete the VPC 
 # Specify the CIDR block and VPC name
 vpc_cidr_block = '10.0.0.0/16'
 vpc_name = 'TESTSTACKVPC'
-
 # Fetch the VPC by CIDR block and VPC name
 vpcs = ec2_client.describe_vpcs(
     Filters=[
@@ -354,7 +338,6 @@ vpcs = ec2_client.describe_vpcs(
         {'Name': 'tag:Name', 'Values': [vpc_name]}
     ]
 )
-
 # Fetch the VPC by CIDR block and VPC name
 vpcs = ec2_client.describe_vpcs(
     Filters=[
@@ -362,7 +345,6 @@ vpcs = ec2_client.describe_vpcs(
         {'Name': 'tag:Name', 'Values': [vpc_name]}
     ]
 )
-
 if vpcs['Vpcs']:
     # Get the VPC ID
     vpc_id = vpcs['Vpcs'][0]['VpcId']
@@ -375,21 +357,18 @@ if vpcs['Vpcs']:
         print(f"Detaching and deleting Internet Gateway: {igw_id}")
         ec2_client.detach_internet_gateway(InternetGatewayId=igw_id, VpcId=vpc_id)
         ec2_client.delete_internet_gateway(InternetGatewayId=igw_id)
-
     # 2. Delete NAT gateways
     nat_gateways = ec2_client.describe_nat_gateways(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
     for nat_gw in nat_gateways['NatGateways']:
         nat_gw_id = nat_gw['NatGatewayId']
         print(f"Deleting NAT Gateway: {nat_gw_id}")
         ec2_client.delete_nat_gateway(NatGatewayId=nat_gw_id)
-
     # 3. Delete subnets
     subnets = ec2_client.describe_subnets(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
     for subnet in subnets['Subnets']:
         subnet_id = subnet['SubnetId']
         print(f"Deleting Subnet: {subnet_id}")
         ec2_client.delete_subnet(SubnetId=subnet_id)
-
     # 4. Delete route tables (except the main route table)
     route_tables = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
     for rt in route_tables['RouteTables']:
@@ -398,7 +377,6 @@ if vpcs['Vpcs']:
         if not any(assoc['Main'] for assoc in associations):
             print(f"Deleting Route Table: {rt_id}")
             ec2_client.delete_route_table(RouteTableId=rt_id)
-
     # 5. Delete security groups (except default group)
     security_groups = ec2_client.describe_security_groups(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
     for sg in security_groups['SecurityGroups']:
@@ -406,14 +384,12 @@ if vpcs['Vpcs']:
             sg_id = sg['GroupId']
             print(f"Deleting Security Group: {sg_id}")
             ec2_client.delete_security_group(GroupId=sg_id)
-
     # 6. Delete VPC peering connections
     vpc_peering_connections = ec2_client.describe_vpc_peering_connections(Filters=[{'Name': 'requester-vpc-info.vpc-id', 'Values': [vpc_id]}])
     for pcx in vpc_peering_connections['VpcPeeringConnections']:
         pcx_id = pcx['VpcPeeringConnectionId']
         print(f"Deleting VPC Peering Connection: {pcx_id}")
         ec2_client.delete_vpc_peering_connection(VpcPeeringConnectionId=pcx_id)
-
     # Finally, delete the VPC
     print(f"Deleting VPC: {vpc_id}")
     ec2_client.delete_vpc(VpcId=vpc_id)
