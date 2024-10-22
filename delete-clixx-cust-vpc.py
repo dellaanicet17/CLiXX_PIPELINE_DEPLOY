@@ -130,13 +130,13 @@ else:
 # Define your target group name
 tg_name = 'CLiXX-TG'
 # Remove the Target Group if it exists
-response = elbv2_client.describe_target_groups(Names=[tg_name])
-if response['TargetGroups']:
-    tg_arn = response['TargetGroups'][0]['TargetGroupArn']
+#response = elbv2_client.describe_target_groups(Names=[tg_name])
+#if response['TargetGroups']:
+#    tg_arn = response['TargetGroups'][0]['TargetGroupArn']
 
     # Delete the Target Group
-    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
-    print(f"Target Group '{tg_name}' deleted.")
+#    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
+#    print(f"Target Group '{tg_name}' deleted.")
 
     # Wait for the target group to be deleted
     #while True:
@@ -147,8 +147,8 @@ if response['TargetGroups']:
     #    else:
     #        print(f"Waiting for target group '{tg_arn}' to be deleted...")
     #        time.sleep(5)
-else:
-    print(f"Target group '{tg_name}' does not exist.")
+#else:
+#    print(f"Target group '{tg_name}' does not exist.")
 
 ################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
