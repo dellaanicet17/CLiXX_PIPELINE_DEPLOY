@@ -110,35 +110,42 @@ else:
     print(f"Deleted EFS with File System ID: {file_system_id}")
 
 #################### Delete Target Group
-# Name of the target group to delete
+# Define your target group name
 tg_name = 'CLiXX-TG'
-
-# Check if the load balancer still exists
-load_balancers = elbv2_client.describe_load_balancers()['LoadBalancers']
-elb_exists = any(lb['LoadBalancerName'] == lb_name for lb in load_balancers)
-
-# Wait for ELB deletion to complete
-while elb_exists:
-    print(f"Waiting for ELB '{lb_name}' to be deleted...")
-    time.sleep(20)  # Polling interval (in seconds)
-
-    # Recheck the existence of the load balancer
-    load_balancers = elbv2_client.describe_load_balancers()['LoadBalancers']
-    elb_exists = any(lb['LoadBalancerName'] == lb_name for lb in load_balancers)
-print(f"ELB '{lb_name}' has been deleted.")
 
 # Describe all target groups to find the one with the specified name
 target_groups = elbv2_client.describe_target_groups()
+tg_arn = None
 
 # Loop through target groups and find the one with the matching name
 for tg in target_groups['TargetGroups']:
     if tg['TargetGroupName'] == tg_name:
         tg_arn = tg['TargetGroupArn']
-
-        # Delete the target group using its ARN
-        elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
-        print(f"Target Group '{tg_name}' deleted.")
+        print(f"Found target group: {tg_name} (ARN: {tg_arn})")
         break
+
+if tg_arn:
+    # Describe all listeners to find any using the target group
+    listeners = elbv2_client.describe_listeners(LoadBalancerArn='your-load-balancer-arn')
+    # Flag to check if any listener is using the target group
+    listener_in_use = False
+    for listener in listeners['Listeners']:
+        if 'DefaultActions' in listener:
+            for action in listener['DefaultActions']:
+                if action['Type'] == 'forward' and action['TargetGroupArn'] == tg_arn:
+                    listener_in_use = True
+                    print(f"Listener {listener['ListenerArn']} is using the target group. Removing it...")
+                    # Remove the listener
+                    elbv2_client.delete_listener(ListenerArn=listener['ListenerArn'])
+                    print(f"Listener {listener['ListenerArn']} deleted.")
+    if not listener_in_use:
+        print(f"No listeners are using the target group {tg_name}.")
+
+    # Now delete the target group
+    elbv2_client.delete_target_group(TargetGroupArn=tg_arn)
+    print(f"Target Group '{tg_name}' deleted.")
+else:
+    print(f"Target Group '{tg_name}' not found.")
 
 ################## Delete Route 53 record for the load balancer
 # Specify your Hosted Zone ID and the record name
