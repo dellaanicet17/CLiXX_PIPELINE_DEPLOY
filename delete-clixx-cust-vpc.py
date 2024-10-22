@@ -141,56 +141,25 @@ else:
 hosted_zone_id = 'Z022607324NJ585R59I5F'
 record_name = 'test.clixx-wdella.com'
 # --- Route 53 Record Deletion ---
-route53_response = route53_client.list_resource_record_sets(
-    HostedZoneId=hosted_zone_id
-)
-for record in route53_response['ResourceRecordSets']:
-    # Check if this is the record we want to delete
-    if record['Name'] == record_name:
-        if 'ResourceRecords' in record:
-            # Deleting a standard record with ResourceRecords
-            print(f"Deleting standard record: {record_name}")
-            delete_response = route53_client.change_resource_record_sets(
-                HostedZoneId=hosted_zone_id,
-                ChangeBatch={
-                    'Changes': [
-                        {
-                            'Action': 'DELETE',
-                            'ResourceRecordSet': {
-                                'Name': record['Name'],
-                                'Type': record['Type'],
-                                'TTL': record['TTL'],
-                                'ResourceRecords': record['ResourceRecords']
-                            }
-                        }
-                    ]
-                }
-            )
-            print(f"Deleted standard record: {record_name}")
-        elif 'AliasTarget' in record:
-            # Deleting an Alias record
-            print(f"Deleting Alias record: {record_name}")
-            delete_response = route53_client.change_resource_record_sets(
-                HostedZoneId=hosted_zone_id,
-                ChangeBatch={
-                    'Changes': [
-                        {
-                            'Action': 'DELETE',
-                            'ResourceRecordSet': {
-                                'Name': record['Name'],
-                                'Type': record['Type'],
-                                'AliasTarget': record['AliasTarget']
-                            }
-                        }
-                    ]
-                }
-            )
-            print(f"Deleted Alias record: {record_name}")
-        else:
-            print(f"Record '{record['Name']}' does not have 'ResourceRecords' or 'AliasTarget'.")
-        break  # Exit after finding and deleting the record
-else:
-    print(f"Record '{record_name}' not found.")
+# Check if the Route 53 record set already exists
+response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+record_found = False
+
+for record in response['ResourceRecordSets']:
+    if record['Name'].rstrip('.') == record_name:
+        route53_client.change_resource_record_sets(
+            HostedZoneId=hosted_zone_id,
+            ChangeBatch={
+                'Changes': [
+                    {
+                        'Action': 'DELETE',
+                        'ResourceRecordSet': record
+                    }
+                ]
+            }
+        )
+        record_found = True
+        break  # Exit the loop after deletion
 
 #################### Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
