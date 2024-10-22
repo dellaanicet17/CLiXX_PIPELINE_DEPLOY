@@ -150,7 +150,7 @@ for tg in target_groups['TargetGroups']:
 
 if tg_arn:
     # Describe all listeners to find any using the target group
-    listeners = elbv2_client.describe_listeners(LoadBalancerArn='your-load-balancer-arn')
+    listeners = elbv2_client.describe_listeners(LoadBalancerArn=lb_arn)
     # Flag to check if any listener is using the target group
     listener_in_use = False
     for listener in listeners['Listeners']:
