@@ -44,7 +44,7 @@ autoscaling_client = boto3.client('autoscaling', region_name="us-east-1",
                                   aws_access_key_id=credentials['AccessKeyId'], 
                                   aws_secret_access_key=credentials['SecretAccessKey'], 
                                   aws_session_token=credentials['SessionToken'])
-
+'''
 ##################### Delete the DB instance
 # Step 1: Check for and delete RDS instance
 db_instance_name = 'wordpressdbclixx'
@@ -341,7 +341,7 @@ if db_subnet_group_exists:
         print(f"DB Subnet Group '{DBSubnetGroupName}' deleted successfully.")
 else:
     print(f"DB Subnet Group '{DBSubnetGroupName}' not found.")
-
+'''
 #################### Delete the VPC 
 # Specify the CIDR block and VPC name
 vpc_cidr_block = '10.0.0.0/16'
@@ -355,12 +355,67 @@ vpcs = ec2_client.describe_vpcs(
     ]
 )
 
+# Fetch the VPC by CIDR block and VPC name
+vpcs = ec2_client.describe_vpcs(
+    Filters=[
+        {'Name': 'cidr', 'Values': [vpc_cidr_block]},
+        {'Name': 'tag:Name', 'Values': [vpc_name]}
+    ]
+)
+
 if vpcs['Vpcs']:
     # Get the VPC ID
     vpc_id = vpcs['Vpcs'][0]['VpcId']
-    print(f"VPC found: {vpc_id} with Name '{vpc_name}'. Deleting...")
+    print(f"VPC found: {vpc_id} with Name '{vpc_name}'. Deleting dependencies...")
 
-    # Delete the VPC
+    # 1. Detach and delete internet gateways
+    igws = ec2_client.describe_internet_gateways(Filters=[{'Name': 'attachment.vpc-id', 'Values': [vpc_id]}])
+    for igw in igws['InternetGateways']:
+        igw_id = igw['InternetGatewayId']
+        print(f"Detaching and deleting Internet Gateway: {igw_id}")
+        ec2_client.detach_internet_gateway(InternetGatewayId=igw_id, VpcId=vpc_id)
+        ec2_client.delete_internet_gateway(InternetGatewayId=igw_id)
+
+    # 2. Delete NAT gateways
+    nat_gateways = ec2_client.describe_nat_gateways(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
+    for nat_gw in nat_gateways['NatGateways']:
+        nat_gw_id = nat_gw['NatGatewayId']
+        print(f"Deleting NAT Gateway: {nat_gw_id}")
+        ec2_client.delete_nat_gateway(NatGatewayId=nat_gw_id)
+
+    # 3. Delete subnets
+    subnets = ec2_client.describe_subnets(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
+    for subnet in subnets['Subnets']:
+        subnet_id = subnet['SubnetId']
+        print(f"Deleting Subnet: {subnet_id}")
+        ec2_client.delete_subnet(SubnetId=subnet_id)
+
+    # 4. Delete route tables (except the main route table)
+    route_tables = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
+    for rt in route_tables['RouteTables']:
+        rt_id = rt['RouteTableId']
+        associations = rt['Associations']
+        if not any(assoc['Main'] for assoc in associations):
+            print(f"Deleting Route Table: {rt_id}")
+            ec2_client.delete_route_table(RouteTableId=rt_id)
+
+    # 5. Delete security groups (except default group)
+    security_groups = ec2_client.describe_security_groups(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
+    for sg in security_groups['SecurityGroups']:
+        if sg['GroupName'] != 'default':
+            sg_id = sg['GroupId']
+            print(f"Deleting Security Group: {sg_id}")
+            ec2_client.delete_security_group(GroupId=sg_id)
+
+    # 6. Delete VPC peering connections
+    vpc_peering_connections = ec2_client.describe_vpc_peering_connections(Filters=[{'Name': 'requester-vpc-info.vpc-id', 'Values': [vpc_id]}])
+    for pcx in vpc_peering_connections['VpcPeeringConnections']:
+        pcx_id = pcx['VpcPeeringConnectionId']
+        print(f"Deleting VPC Peering Connection: {pcx_id}")
+        ec2_client.delete_vpc_peering_connection(VpcPeeringConnectionId=pcx_id)
+
+    # Finally, delete the VPC
+    print(f"Deleting VPC: {vpc_id}")
     ec2_client.delete_vpc(VpcId=vpc_id)
     print(f"VPC {vpc_id} with Name '{vpc_name}' deleted.")
 else:
