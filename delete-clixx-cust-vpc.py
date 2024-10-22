@@ -186,7 +186,11 @@ delete_response = route53_client.change_resource_record_sets(
                     'Name': record_name,
                     'Type': 'A',
                     'TTL': 300,
-                    #'ResourceRecords': [{'Value': record_value}],
+                    'ResourceRecords': [
+                        {
+                            'Value': lb_arn
+                        }
+                    ]
                 }
             }
         ]
