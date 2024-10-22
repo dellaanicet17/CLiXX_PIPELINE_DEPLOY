@@ -134,7 +134,7 @@ else:
     print(f"Deleted EFS with File System ID: {file_system_id}")
 
 #################### Delete Target Group
- Define your target group name
+# Define your target group name
 tg_name = 'CLiXX-TG'
 
 # Describe all target groups to find the one with the specified name
