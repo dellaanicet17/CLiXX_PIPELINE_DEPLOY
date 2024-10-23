@@ -161,6 +161,7 @@ for record in response['ResourceRecordSets']:
         )
         record_found = True
         break  # Exit the loop after deletion
+    print(f"Record '{record_name}' deleted.")
 
 #################### Delete Auto Scaling Group 
 # Specify the Auto Scaling Group Name
