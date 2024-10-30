@@ -774,25 +774,31 @@ route53_response = route53_client.list_resource_record_sets(
 # Check if the record already exists
 record_exists = any(record['Name'] == record_name for record in route53_response['ResourceRecordSets'])
 if not record_exists:
-    route53_client.change_resource_record_sets(
-        HostedZoneId=hosted_zone_id,
-        ChangeBatch={
-            'Comment': 'Create a record for the CLiXX Load Balancer',
-            'Changes': [{
-                'Action': 'CREATE',
-                'ResourceRecordSet': {
-                    'Name': record_name,
-                    'Type': 'A',
-                    'AliasTarget': {
-                        'HostedZoneId': load_balancer['LoadBalancers'][0]['CanonicalHostedZoneId'],
-                        'DNSName': load_balancer['LoadBalancers'][0]['DNSName'],
-                        'EvaluateTargetHealth': False
+    # Fetch the load balancer details if it doesn't exist
+    load_balancer_details = elbv2_client.describe_load_balancers(LoadBalancerArns=[load_balancer_arn])
+    if load_balancer_details['LoadBalancers']:
+        load_balancer_info = load_balancer_details['LoadBalancers'][0]
+        route53_client.change_resource_record_sets(
+            HostedZoneId=hosted_zone_id,
+            ChangeBatch={
+                'Comment': 'Create a record for the CLiXX Load Balancer',
+                'Changes': [{
+                    'Action': 'CREATE',
+                    'ResourceRecordSet': {
+                        'Name': record_name,
+                        'Type': 'A',
+                        'AliasTarget': {
+                            'HostedZoneId': load_balancer_info['CanonicalHostedZoneId'],
+                            'DNSName': load_balancer_info['DNSName'],
+                            'EvaluateTargetHealth': False
+                        }
                     }
-                }
-            }]
-        }
-    )
-    print(f"Route 53 record created for {record_name}")
+                }]
+            }
+        )
+        print(f"Route 53 record created for {record_name}")
+    else:
+        print("Load balancer details not found.")
 else:
     print(f"Route 53 record already exists for {record_name}")
 
