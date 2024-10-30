@@ -536,18 +536,18 @@ else:
 mount_targets = efs_client.describe_mount_targets(FileSystemId=file_system_id)
 existing_mount_targets = {mt["SubnetId"] for mt in mount_targets["MountTargets"]}
 
-if "subnet-priv1-webapp-id" not in existing_mount_targets:
+if "private_subnet1_webapp_id" not in existing_mount_targets:
     efs_client.create_mount_target(
         FileSystemId=file_system_id,
-        SubnetId="subnet-priv1-webapp-id",
-        SecurityGroups=["security-group-id"],
+        SubnetId="private_subnet1_webapp_id",
+        SecurityGroups=["priv_sg_id"],
     )
 
-if "subnet-priv2-webapp-id" not in existing_mount_targets:
+if "private_subnet2_webapp_id" not in existing_mount_targets:
     efs_client.create_mount_target(
         FileSystemId=file_system_id,
-        SubnetId="subnet-priv2-webapp-id",
-        SecurityGroups=["security-group-id"],
+        SubnetId="private_subnet2_webapp_id",
+        SecurityGroups=["priv_sg_id"],
     )
 
 # --- Check Bastion Instances ---
