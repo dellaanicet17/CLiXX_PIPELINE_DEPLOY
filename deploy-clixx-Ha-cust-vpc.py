@@ -266,16 +266,22 @@ else:
     print(f"NAT Gateway already exists with Name tag 'MYSTACKNAT-GW1'")
     nat_gateway1_id = nat_gateway1_response['NatGateways'][0]['NatGatewayId']
 
+# Debugging: Print the value of public_subnet2_id
+print(f"Public Subnet 2 ID: {public_subnet2_id}")
 # For NAT Gateway 2
 nat_gateway2_response = ec2_client.describe_nat_gateways(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-GW2']}])
 if not nat_gateway2_response['NatGateways']:
-    nat_gateway2_response = ec2_client.create_nat_gateway(AllocationId=nat_eip2_id, SubnetId=public_subnet2_id)
-    ec2_client.create_tags(Resources=[nat_gateway2_response['NatGateway']['NatGatewayId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW2'}])
-    print(f"NAT Gateway created: {nat_gateway2_response['NatGateway']['NatGatewayId']} with Name tag 'MYSTACKNAT-GW2'")
-    nat_gateway2_id = nat_gateway2_response['NatGateway']['NatGatewayId'] 
+    if public_subnet2_id is not None:
+        nat_gateway2_response = ec2_client.create_nat_gateway(AllocationId=nat_eip2_id, SubnetId=public_subnet2_id)
+        ec2_client.create_tags(Resources=[nat_gateway2_response['NatGateway']['NatGatewayId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW2'}])
+        print(f"NAT Gateway created: {nat_gateway2_response['NatGateway']['NatGatewayId']} with Name tag 'MYSTACKNAT-GW2'")
+        nat_gateway2_id = nat_gateway2_response['NatGateway']['NatGatewayId']  # Use the id directly
+    else:
+        print("Error: public_subnet2_id is None. Please check the subnet ID assignment.")
 else:
     print(f"NAT Gateway already exists with Name tag 'MYSTACKNAT-GW2'")
     nat_gateway2_id = nat_gateway2_response['NatGateways'][0]['NatGatewayId']
+
 
 # --- Public Route Tables ---
 # Public Route Table 1
