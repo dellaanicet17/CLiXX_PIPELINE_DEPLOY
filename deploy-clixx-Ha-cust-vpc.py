@@ -99,7 +99,8 @@ if not public_subnet1['Subnets']:
 else:
     print(f"Public Subnet already exists with CIDR block {pub_sub1_cidr_block}")
 #public_subnet1_id = public_subnet1['Subnets'][0]['SubnetId'] if public_subnet1['Subnets'] else public_subnet1['Subnet']['SubnetId']
-public_subnet1_id = public_subnet1.subnet_id if public_subnet1 else None
+#public_subnet1_id = public_subnet1.subnet_id if public_subnet1 else None
+public_subnet1_id = public_subnet1['Subnets'][0]['SubnetId'] if public_subnet1 and 'Subnets' in public_subnet1 and public_subnet1['Subnets'] else None
 
 public_subnet2 = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [pub_sub2_cidr_block]}])
 if not public_subnet1['Subnets']:
@@ -109,7 +110,8 @@ if not public_subnet1['Subnets']:
 else:
     print(f"Public Subnet already exists with CIDR block {pub_sub2_cidr_block}")
 #public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId'] if public_subnet2['Subnets'] else public_subnet2['Subnet']['SubnetId']
-public_subnet2_id = public_subnet2.subnet_id if public_subnet2 else None
+#public_subnet2_id = public_subnet2.subnet_id if public_subnet2 else None
+public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId'] if public_subnet2 and 'Subnets' in public_subnet2 and public_subnet2['Subnets'] else None
 
 # Create Private Subnets for Web Application
 private_subnet1_webapp = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_webapp]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
