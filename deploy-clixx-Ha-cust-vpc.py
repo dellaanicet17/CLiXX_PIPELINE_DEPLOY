@@ -90,25 +90,33 @@ else:
 vpc_id = vpcs['Vpcs'][0]['VpcId'] if vpcs['Vpcs'] else vpc.id
 
 # --- Public and Private Subnet ---
-# Create Public Subnets for load balancer
+# --- Create Public Subnet 1 ---
 public_subnet1 = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [pub_sub1_cidr_block]}])
 if not public_subnet1['Subnets']:
-    public_subnet1_response = ec2_client.create_subnet(VpcId=vpc_id, CidrBlock=pub_sub1_cidr_block, AvailabilityZone=pub_az_1)
-    public_subnet1_id = public_subnet1_response['Subnet']['SubnetId']  # Correctly get the SubnetId
+    public_subnet1_response = ec2_client.create_subnet(
+        VpcId=vpc_id,
+        CidrBlock=pub_sub1_cidr_block,
+        AvailabilityZone=pub_az_1
+    )
+    public_subnet1_id = public_subnet1_response['Subnet']['SubnetId']
     ec2_client.create_tags(Resources=[public_subnet1_id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKPUBSUB1'}])
     print(f"Public Subnet created: {public_subnet1_id} with Name tag 'MYSTACKPUBSUB1'")
 else:
-    public_subnet1_id = public_subnet1['Subnets'][0]['SubnetId']  # Assign existing subnet ID
+    public_subnet1_id = public_subnet1['Subnets'][0]['SubnetId']
     print(f"Public Subnet already exists with CIDR block {pub_sub1_cidr_block}, ID: {public_subnet1_id}")
-
+# --- Create Public Subnet 2 ---
 public_subnet2 = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [pub_sub2_cidr_block]}])
-if not public_subnet2['Subnets']:  # Change to public_subnet2
-    public_subnet2_response = ec2_client.create_subnet(VpcId=vpc_id, CidrBlock=pub_sub2_cidr_block, AvailabilityZone=pub_az_2)
-    public_subnet2_id = public_subnet2_response['Subnet']['SubnetId']  # Correctly get the SubnetId
+if not public_subnet2['Subnets']:
+    public_subnet2_response = ec2_client.create_subnet(
+        VpcId=vpc_id,
+        CidrBlock=pub_sub2_cidr_block,
+        AvailabilityZone=pub_az_2
+    )
+    public_subnet2_id = public_subnet2_response['Subnet']['SubnetId']
     ec2_client.create_tags(Resources=[public_subnet2_id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKPUBSUB2'}])
     print(f"Public Subnet created: {public_subnet2_id} with Name tag 'MYSTACKPUBSUB2'")
 else:
-    public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId']  # Assign existing subnet ID
+    public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId']
     print(f"Public Subnet already exists with CIDR block {pub_sub2_cidr_block}, ID: {public_subnet2_id}")
 
 # Create Private Subnets for Web Application
