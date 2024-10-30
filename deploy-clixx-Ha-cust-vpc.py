@@ -486,13 +486,14 @@ else:
     print(f"Private Security Group already exists with ID: {priv_sg_id}")  # Print existing Private SG ID
 
 # --- Check DB Subnet Groups ---
+DBSubnetGroupName="mystack-app-db-dbsubnetgroup"
 db_subnet_groups = rds_client.describe_db_subnet_groups()
 existing_subnet_group_names = {group["DBSubnetGroupName"] for group in db_subnet_groups["DBSubnetGroups"]}
 # Create MySQL DB Subnet Group if it does not exist
 
 if "mystack-app-db-dbsubnetgroup" not in existing_subnet_group_names:
     rds_client.create_db_subnet_group(
-        DBSubnetGroupName="mystack-app-db-dbsubnetgroup",  # Fixed the naming
+        DBSubnetGroupName=DBSubnetGroupName,  # Fixed the naming
         DBSubnetGroupDescription="MySQL application database subnet group",  # Add a description
         SubnetIds=[
             private_subnet1_app_db_id,  # Use the actual variable for subnet ID
@@ -730,7 +731,7 @@ else:
     print("HTTPS Listener already exists.")
 
 # --- RDS Instance ---
-DBSubnetGroupName = "mystack-rds-dbsubnetgroup"
+DBSubnetGroupName = "mystack-app-db-dbsubnetgroup"
 # Check if the DB instance already exists
 db_instances = rds_client.describe_db_instances()
 db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
