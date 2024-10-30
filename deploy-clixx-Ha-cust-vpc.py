@@ -576,7 +576,7 @@ for private_subnet_id in private_subnet_ids:
 
 
 # --- Check Bastion Instances ---
-instances = ec2_resource.describe_instances(Filters=[{"Name": "tag:Name", "Values": ["MYSTACK-BASTION1", "MYSTACK-BASTION2"]}])
+instances = ec2_client.describe_instances(Filters=[{"Name": "tag:Name", "Values": ["MYSTACK-BASTION1", "MYSTACK-BASTION2"]}])
 existing_instance_ids = {instance["InstanceId"] for reservation in instances["Reservations"] for instance in reservation["Instances"]}
 
 if "MYSTACK-BASTION1" not in existing_instance_ids:
