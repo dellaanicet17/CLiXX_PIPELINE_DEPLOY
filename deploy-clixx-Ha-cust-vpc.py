@@ -235,10 +235,10 @@ else:
 # For NAT EIP 1
 nat_eip1_response = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP1']}])
 if not nat_eip1_response['Addresses']:
-    nat_eip1 = ec2_resource.create_eip(Domain='vpc')
-    ec2_client.create_tags(Resources=[nat_eip1.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP1'}])
-    print(f"NAT Elastic IP created: {nat_eip1.id} with Name tag 'MYSTACKNAT-EIP1'")
-    nat_eip1_id = nat_eip1.id  # Use the id directly
+    nat_eip1_response = ec2_client.allocate_address(Domain='vpc')
+    ec2_client.create_tags(Resources=[nat_eip1_response['AllocationId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP1'}])
+    print(f"NAT Elastic IP created: {nat_eip1_response['PublicIp']} with Name tag 'MYSTACKNAT-EIP1'")
+    nat_eip1_id = nat_eip1_response['AllocationId']  # Use the AllocationId directly
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP1'")
     nat_eip1_id = nat_eip1_response['Addresses'][0]['AllocationId']
@@ -246,10 +246,10 @@ else:
 # For NAT EIP 2
 nat_eip2_response = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP2']}])
 if not nat_eip2_response['Addresses']:
-    nat_eip2 = ec2_resource.create_eip(Domain='vpc')
-    ec2_client.create_tags(Resources=[nat_eip2.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP2'}])
-    print(f"NAT Elastic IP created: {nat_eip2.id} with Name tag 'MYSTACKNAT-EIP2'")
-    nat_eip2_id = nat_eip2.id  # Use the id directly
+    nat_eip2_response = ec2_client.allocate_address(Domain='vpc')
+    ec2_client.create_tags(Resources=[nat_eip2_response['AllocationId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP2'}])
+    print(f"NAT Elastic IP created: {nat_eip2_response['PublicIp']} with Name tag 'MYSTACKNAT-EIP2'")
+    nat_eip2_id = nat_eip2_response['AllocationId']  # Use the AllocationId directly
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP2'")
     nat_eip2_id = nat_eip2_response['Addresses'][0]['AllocationId']
