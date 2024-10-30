@@ -78,16 +78,16 @@ record_name = "test.clixx-wdella.com"
 aws_region = "us-east-1"
 
 # --- VPC ---
-vpcs = ec2_client.describe_vpcs(Filters=[{'Name': 'cidr', 'Values': [vpc_cidr_block]}])
-if not vpcs['Vpcs']:
-    vpc = ec2_resource.create_vpc(CidrBlock=vpc_cidr_block)
-    ec2_client.create_tags(Resources=[vpc.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKVPC'}])
-    ec2_client.modify_vpc_attribute(VpcId=vpc.id, EnableDnsSupport={'Value': True})
-    ec2_client.modify_vpc_attribute(VpcId=vpc.id, EnableDnsHostnames={'Value': True})
-    print(f"VPC created: {vpc.id} with Name tag 'MYSTACKVPC'")
+vpcs = ec2_client.describe_vpcs(Filters=[{'Name': 'cidr-block', 'Values': [vpc_cidr_block]}])
+if vpcs['Vpcs']:
+    vpc_id = vpcs['Vpcs'][0]['VpcId']  # Get the existing VPC ID
+    print(f"VPC already exists with ID {vpc_id} and CIDR block {vpc_cidr_block}")
 else:
-    print(f"VPC already {vpc.id} exists with CIDR block {vpc_cidr_block}")
-vpc_id = vpcs['Vpcs'][0]['VpcId'] if vpcs['Vpcs'] else vpc.id
+    # Create a new VPC if one with the specified CIDR block does not exist
+    vpc_response = ec2_client.create_vpc(CidrBlock=vpc_cidr_block)
+    vpc_id = vpc_response['Vpc']['VpcId']  # Assign new VPC ID
+    ec2_client.create_tags(Resources=[vpc_id], Tags=[{'Key': 'Name', 'Value': 'MYSTACK-VPC'}])
+    print(f"Created new VPC with ID {vpc_id} and CIDR block {vpc_cidr_block}")
 
 # --- Public and Private Subnet ---
 # --- Create Public Subnet 1 ---
