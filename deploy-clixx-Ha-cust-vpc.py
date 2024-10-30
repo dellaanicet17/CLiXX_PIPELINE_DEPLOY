@@ -107,7 +107,8 @@ if not public_subnet1['Subnets']:
     print(f"Public Subnet created: {public_subnet2.id} with Name tag 'MYSTACKPUBSUB2'")
 else:
     print(f"Public Subnet already exists with CIDR block {pub_sub2_cidr_block}")
-public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId'] if public_subnet2['Subnets'] else public_subnet2['Subnet']['SubnetId']
+#public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId'] if public_subnet2['Subnets'] else public_subnet2['Subnet']['SubnetId']
+public_subnet2_id = public_subnet2.subnet_id if public_subnet2 else None
 
 # Create Private Subnets for Web Application
 private_subnet1_webapp = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_webapp]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
@@ -320,6 +321,7 @@ if not priv_rt2['RouteTables']:
 else:
     print(f"Private Route Table 2 already exists: {priv_rt2['RouteTables'][0]['RouteTableId']}")
 priv_rt2_id = priv_rt2['RouteTables'][0]['RouteTableId'] if priv_rt2['RouteTables'] else priv_rt2['RouteTables']['RouteTableId']
+
 # --- Route Table Associations for Private Route Table 2 ---
 for subnet_id in [private_subnet2_webapp_id, private_subnet2_app_db_id, private_subnet2_oracle_db_id, private_subnet2_java_db_id, private_subnet2_java_app_id]:
     assoc_priv_rt2 = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt2_id]}, {'Name': 'subnet-id', 'Values': [subnet_id]}])
