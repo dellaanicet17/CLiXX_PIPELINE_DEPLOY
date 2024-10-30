@@ -747,7 +747,7 @@ else:
         DBInstanceIdentifier=db_instance_identifier,
         DBSnapshotIdentifier=db_snapshot_identifier,
         DBInstanceClass=db_instance_class,
-        VpcSecurityGroupIds=[private_subnet1_app_db_id],
+        VpcSecurityGroupIds=[priv_sg_id],
         DBSubnetGroupName=DBSubnetGroupName,
         PubliclyAccessible=False,
         MultiAZ=True,
