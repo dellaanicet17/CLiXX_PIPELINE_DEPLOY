@@ -417,6 +417,7 @@ bastion_sg_id = bastion_sg_response['SecurityGroups'][0]['GroupId'] if bastion_s
 if bastion_sg_id is None:
     bastion_sg_response = ec2_client.create_security_group(GroupName=bastion_sg_name, Description='Bastion Security Group', VpcId=vpc_id)
     bastion_sg_id = bastion_sg_response['GroupId']
+    print(f"Created Bastion Security Group with ID: {bastion_sg_id}")  # Print Bastion SG ID
     ec2_client.authorize_security_group_ingress(GroupId=bastion_sg_id, IpPermissions=[{
         'IpProtocol': 'tcp',
         'FromPort': 22,
@@ -424,6 +425,8 @@ if bastion_sg_id is None:
         'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
     }])
     ec2_client.create_tags(Resources=[bastion_sg_id], Tags=[{'Key': 'Name', 'Value': bastion_sg_name}])
+else:
+    print(f"Bastion Security Group already exists with ID: {bastion_sg_id}")  # Print existing Bastion SG ID
 
 # Check if Public Security Group exists
 pub_sg_response = ec2_client.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [pub_sg_name]}])
@@ -432,6 +435,7 @@ pub_sg_id = pub_sg_response['SecurityGroups'][0]['GroupId'] if pub_sg_response['
 if pub_sg_id is None:
     pub_sg_response = ec2_client.create_security_group(GroupName=pub_sg_name, Description='Public Security Group', VpcId=vpc_id)
     pub_sg_id = pub_sg_response['GroupId']
+    print(f"Created Public Security Group with ID: {pub_sg_id}")  # Print Public SG ID
     ec2_client.authorize_security_group_ingress(GroupId=pub_sg_id, IpPermissions=[
         {'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
         {'IpProtocol': 'icmp', 'FromPort': -1, 'ToPort': -1, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
@@ -441,6 +445,8 @@ if pub_sg_id is None:
         {'IpProtocol': 'tcp', 'FromPort': 2049, 'ToPort': 2049, 'IpRanges': [{'CidrIp': '10.0.0.0/16'}]}
     ])
     ec2_client.create_tags(Resources=[pub_sg_id], Tags=[{'Key': 'Name', 'Value': pub_sg_name}])
+else:
+    print(f"Public Security Group already exists with ID: {pub_sg_id}")  # Print existing Public SG ID
 
 # Check if Private Security Group exists
 priv_sg_response = ec2_client.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [priv_sg_name]}])
@@ -449,6 +455,7 @@ priv_sg_id = priv_sg_response['SecurityGroups'][0]['GroupId'] if priv_sg_respons
 if priv_sg_id is None:
     priv_sg_response = ec2_client.create_security_group(GroupName=priv_sg_name, Description='Private Security Group', VpcId=vpc_id)
     priv_sg_id = priv_sg_response['GroupId']
+    print(f"Created Private Security Group with ID: {priv_sg_id}")  # Print Private SG ID
     ec2_client.authorize_security_group_ingress(GroupId=priv_sg_id, IpPermissions=[
         {'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
         {'IpProtocol': 'icmp', 'FromPort': -1, 'ToPort': -1, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
@@ -458,40 +465,51 @@ if priv_sg_id is None:
         {'IpProtocol': 'tcp', 'FromPort': 80, 'ToPort': 80, 'UserIdGroupPairs': [{'GroupId': pub_sg_id}]}
     ])
     ec2_client.create_tags(Resources=[priv_sg_id], Tags=[{'Key': 'Name', 'Value': priv_sg_name}])
+else:
+    print(f"Private Security Group already exists with ID: {priv_sg_id}")  # Print existing Private SG ID
 
 # --- Check DB Subnet Groups ---
 db_subnet_groups = rds_client.describe_db_subnet_groups()
 existing_subnet_group_names = {group["DBSubnetGroupName"] for group in db_subnet_groups["DBSubnetGroups"]}
 
+# Create MySQL DB Subnet Group if it does not exist
 if "mystack-app_db-dbsubnetgroup" not in existing_subnet_group_names:
     rds_client.create_db_subnet_group(
-        DBSubnetGroupName="mystack-rds-dbsubnetgroup",
+        DBSubnetGroupName="mystack-app-db-dbsubnetgroup",  # Fixed the naming
+        DBSubnetGroupDescription="MySQL application database subnet group",  # Add a description
         SubnetIds=[
             "private_subnet1_app_db_id", 
             "private_subnet2_app_db_id",
         ],
         Tags=[{"Key": "Name", "Value": "MYSTACK-RDS-DBSUBNETGROUP"}],
     )
+    print("Created MySQL application DB Subnet Group.")
 
-if "mystack-oracle_db-dbsubnetgroup" not in existing_subnet_group_names:
+# Create Oracle DB Subnet Group if it does not exist
+if "mystack-oracle-dbsubnetgroup" not in existing_subnet_group_names:
     rds_client.create_db_subnet_group(
         DBSubnetGroupName="mystack-oracle-dbsubnetgroup",
+        DBSubnetGroupDescription="Oracle database subnet group",  # Add a description
         SubnetIds=[
             "private_subnet1_oracle_db_id",
             "private_subnet2_oracle_db_id",
         ],
         Tags=[{"Key": "Name", "Value": "MYSTACK-ORACLE-DBSUBNETGROUP"}],
     )
+    print("Created Oracle DB Subnet Group.")
 
+# Create Java DB Subnet Group if it does not exist
 if "mystack-java_db-dbsubnetgroup" not in existing_subnet_group_names:
     rds_client.create_db_subnet_group(
         DBSubnetGroupName="mystack-java_db-dbsubnetgroup",
+        DBSubnetGroupDescription="Java application database subnet group",  # Add a description
         SubnetIds=[
-            "private_subnet1_java_db_id ",
-            "private_subnet2_java_db_id ",
+            "private_subnet1_java_db_id",
+            "private_subnet2_java_db_id",
         ],
         Tags=[{"Key": "Name", "Value": "MYSTACK-JAVA_DB-DBSUBNETGROUP"}],
     )
+    print("Created Java application DB Subnet Group.")
 
 # --- Check EFS Setup ---
 efs_file_systems = efs_client.describe_file_systems()
