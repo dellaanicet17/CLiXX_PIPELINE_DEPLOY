@@ -401,11 +401,11 @@ pub_sg_name = "MYSTACKPUB-SG"
 priv_sg_name = "MYSTACKPRIV-SG"
 
 # Check if Bastion Security Group exists
-bastion_sg_response = ec2_resource.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [bastion_sg_name]}])
+bastion_sg_response = ec2_client.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [bastion_sg_name]}])
 bastion_sg_id = bastion_sg_response['SecurityGroups'][0]['GroupId'] if bastion_sg_response['SecurityGroups'] else None
 
 if bastion_sg_id is None:
-    bastion_sg_response = ec2_resource.create_security_group(GroupName=bastion_sg_name, Description='Bastion Security Group', VpcId=vpc_id)
+    bastion_sg_response = ec2_client.create_security_group(GroupName=bastion_sg_name, Description='Bastion Security Group', VpcId=vpc_id)
     bastion_sg_id = bastion_sg_response['GroupId']
     ec2_client.authorize_security_group_ingress(GroupId=bastion_sg_id, IpPermissions=[{
         'IpProtocol': 'tcp',
@@ -416,11 +416,11 @@ if bastion_sg_id is None:
     ec2_client.create_tags(Resources=[bastion_sg_id], Tags=[{'Key': 'Name', 'Value': bastion_sg_name}])
 
 # Check if Public Security Group exists
-pub_sg_response = ec2_resource.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [pub_sg_name]}])
+pub_sg_response = ec2_client.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [pub_sg_name]}])
 pub_sg_id = pub_sg_response['SecurityGroups'][0]['GroupId'] if pub_sg_response['SecurityGroups'] else None
 
 if pub_sg_id is None:
-    pub_sg_response = ec2_resource.create_security_group(GroupName=pub_sg_name, Description='Public Security Group', VpcId=vpc_id)
+    pub_sg_response = ec2_client.create_security_group(GroupName=pub_sg_name, Description='Public Security Group', VpcId=vpc_id)
     pub_sg_id = pub_sg_response['GroupId']
     ec2_client.authorize_security_group_ingress(GroupId=pub_sg_id, IpPermissions=[
         {'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
@@ -433,11 +433,11 @@ if pub_sg_id is None:
     ec2_client.create_tags(Resources=[pub_sg_id], Tags=[{'Key': 'Name', 'Value': pub_sg_name}])
 
 # Check if Private Security Group exists
-priv_sg_response = ec2_resource.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [priv_sg_name]}])
+priv_sg_response = ec2_client.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [priv_sg_name]}])
 priv_sg_id = priv_sg_response['SecurityGroups'][0]['GroupId'] if priv_sg_response['SecurityGroups'] else None
 
 if priv_sg_id is None:
-    priv_sg_response = ec2_resource.create_security_group(GroupName=priv_sg_name, Description='Private Security Group', VpcId=vpc_id)
+    priv_sg_response = ec2_client.create_security_group(GroupName=priv_sg_name, Description='Private Security Group', VpcId=vpc_id)
     priv_sg_id = priv_sg_response['GroupId']
     ec2_client.authorize_security_group_ingress(GroupId=priv_sg_id, IpPermissions=[
         {'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
