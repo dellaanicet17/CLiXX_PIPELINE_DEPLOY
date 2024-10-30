@@ -226,7 +226,7 @@ if not internet_gateway['InternetGateways']:
     ec2_client.attach_internet_gateway(InternetGatewayId=igw.id, VpcId=vpc_id)
     ec2_client.create_tags(Resources=[igw.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKIGW'}])
     print(f"Internet Gateway created: {igw.id} with Name tag 'MYSTACKIGW'")
-    internet_gateway_id = igw.id  # Use the id directly
+    internet_gateway_id = igw.id  
 else:
     print(f"Internet Gateway already exists for VPC {vpc_id}")
     internet_gateway_id = internet_gateway['InternetGateways'][0]['InternetGatewayId'] 
@@ -238,7 +238,7 @@ if not nat_eip1_response['Addresses']:
     nat_eip1_response = ec2_client.allocate_address(Domain='vpc')
     ec2_client.create_tags(Resources=[nat_eip1_response['AllocationId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP1'}])
     print(f"NAT Elastic IP created: {nat_eip1_response['PublicIp']} with Name tag 'MYSTACKNAT-EIP1'")
-    nat_eip1_id = nat_eip1_response['AllocationId']  # Use the AllocationId directly
+    nat_eip1_id = nat_eip1_response['AllocationId']  
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP1'")
     nat_eip1_id = nat_eip1_response['Addresses'][0]['AllocationId']
@@ -249,32 +249,32 @@ if not nat_eip2_response['Addresses']:
     nat_eip2_response = ec2_client.allocate_address(Domain='vpc')
     ec2_client.create_tags(Resources=[nat_eip2_response['AllocationId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP2'}])
     print(f"NAT Elastic IP created: {nat_eip2_response['PublicIp']} with Name tag 'MYSTACKNAT-EIP2'")
-    nat_eip2_id = nat_eip2_response['AllocationId']  # Use the AllocationId directly
+    nat_eip2_id = nat_eip2_response['AllocationId']  
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP2'")
     nat_eip2_id = nat_eip2_response['Addresses'][0]['AllocationId']
 
 # --- NAT Gateways ---
 # For NAT Gateway 1
-nat_gateway1_response = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
+nat_gateway1_response = ec2_client.describe_nat_gateways(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-GW1']}])
 if not nat_gateway1_response['NatGateways']:
-    nat_gateway1 = ec2_resource.create_nat_gateway(AllocationId=nat_eip1_id, SubnetId=public_subnet1_id)
-    ec2_client.create_tags(Resources=[nat_gateway1.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW1'}])
-    print(f"NAT Gateway created: {nat_gateway1.id} with Name tag 'MYSTACKNAT-GW1'")
-    nat_gateway1_id = nat_gateway1.id  # Use the id directly
+    nat_gateway1_response = ec2_client.create_nat_gateway(AllocationId=nat_eip1_id, SubnetId=public_subnet1_id)
+    ec2_client.create_tags(Resources=[nat_gateway1_response['NatGateway']['NatGatewayId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW1'}])
+    print(f"NAT Gateway created: {nat_gateway1_response['NatGateway']['NatGatewayId']} with Name tag 'MYSTACKNAT-GW1'")
+    nat_gateway1_id = nat_gateway1_response['NatGateway']['NatGatewayId'] 
 else:
-    print(f"NAT Gateway already exists in subnet {public_subnet1_id}")
+    print(f"NAT Gateway already exists with Name tag 'MYSTACKNAT-GW1'")
     nat_gateway1_id = nat_gateway1_response['NatGateways'][0]['NatGatewayId']
 
 # For NAT Gateway 2
-nat_gateway2_response = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet2_id]}])
+nat_gateway2_response = ec2_client.describe_nat_gateways(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-GW2']}])
 if not nat_gateway2_response['NatGateways']:
-    nat_gateway2 = ec2_resource.create_nat_gateway(AllocationId=nat_eip2_id, SubnetId=public_subnet2_id)
-    ec2_client.create_tags(Resources=[nat_gateway2.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW2'}])
-    print(f"NAT Gateway created: {nat_gateway2.id} with Name tag 'MYSTACKNAT-GW2'")
-    nat_gateway2_id = nat_gateway2.id  # Use the id directly
+    nat_gateway2_response = ec2_client.create_nat_gateway(AllocationId=nat_eip2_id, SubnetId=public_subnet2_id)
+    ec2_client.create_tags(Resources=[nat_gateway2_response['NatGateway']['NatGatewayId']], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW2'}])
+    print(f"NAT Gateway created: {nat_gateway2_response['NatGateway']['NatGatewayId']} with Name tag 'MYSTACKNAT-GW2'")
+    nat_gateway2_id = nat_gateway2_response['NatGateway']['NatGatewayId'] 
 else:
-    print(f"NAT Gateway already exists in subnet {public_subnet2_id}")
+    print(f"NAT Gateway already exists with Name tag 'MYSTACKNAT-GW2'")
     nat_gateway2_id = nat_gateway2_response['NatGateways'][0]['NatGatewayId']
 
 # --- Public Route Tables ---
