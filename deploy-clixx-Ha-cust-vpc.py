@@ -730,7 +730,7 @@ else:
     print("HTTPS Listener already exists.")
 
 # --- RDS Instance ---
-DBSubnetGroupName="mystack-rds-dbsubnetgroup"
+DBSubnetGroupName = "mystack-rds-dbsubnetgroup"
 # Check if the DB instance already exists
 db_instances = rds_client.describe_db_instances()
 db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
@@ -750,11 +750,9 @@ else:
         DBSubnetGroupName=DBSubnetGroupName,
         PubliclyAccessible=False,
         MultiAZ=True,
-        SkipFinalSnapshot=True,
         Tags=[{'Key': 'Name', 'Value': 'wordpressdbclixx'}]
     )
     print(f"Restore operation initiated. Response: {response}")
-
 
 # --- Create Route 53 record for the load balancer ---
 route53_response = route53_client.list_resource_record_sets(
