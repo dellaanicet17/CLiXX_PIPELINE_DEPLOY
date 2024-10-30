@@ -86,7 +86,7 @@ if not vpcs['Vpcs']:
     ec2_client.modify_vpc_attribute(VpcId=vpc.id, EnableDnsHostnames={'Value': True})
     print(f"VPC created: {vpc.id} with Name tag 'MYSTACKVPC'")
 else:
-    print(f"VPC already exists with CIDR block {vpc_cidr_block}")
+    print(f"VPC already {vpc.id} exists with CIDR block {vpc_cidr_block}")
 vpc_id = vpcs['Vpcs'][0]['VpcId'] if vpcs['Vpcs'] else vpc.id
 
 # --- Public and Private Subnet ---
@@ -644,7 +644,7 @@ if target_group_arn is None:
         Name='CLiXX-TG',
         Protocol='HTTP',
         Port=80,
-        VpcId=vpc.id,
+        VpcId=vpc_id,
         TargetType='instance',
         HealthCheckProtocol='HTTP',
         HealthCheckPort='traffic-port',
@@ -676,7 +676,7 @@ if load_balancer_arn is None:
     print("Load Balancer 'CLiXX-LB' not found. Creating a new load balancer.")
     load_balancer = elbv2_client.create_load_balancer(
         Name='CLiXX-LB',
-        Subnets=[public_subnet1.id, public_subnet2.id],
+        Subnets=[public_subnet1_id, public_subnet2_id],
         SecurityGroups=[pub_sg_id],
         Scheme='internet-facing',
         IpAddressType='ipv4',
@@ -746,7 +746,7 @@ else:
         DBInstanceIdentifier=db_instance_identifier,
         DBSnapshotIdentifier=db_snapshot_identifier,
         DBInstanceClass=db_instance_class,
-        VpcSecurityGroupIds=[private_subnet1_app_db.id],
+        VpcSecurityGroupIds=[private_subnet1_app_db_id],
         DBSubnetGroupName=DBSubnetGroupName,
         PubliclyAccessible=False,
         MultiAZ=True,
