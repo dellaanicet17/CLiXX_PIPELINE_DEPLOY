@@ -574,13 +574,9 @@ for private_subnet_id in private_subnet_ids:
     else:
         print(f"Mount target already exists in Private Subnet: {private_subnet_id}")
 
-
 # --- Check Bastion Instances ---
 instances = ec2_client.describe_instances(Filters=[{"Name": "tag:Name", "Values": ["MYSTACK-BASTION1", "MYSTACK-BASTION2"]}])
 existing_instance_ids = {instance["InstanceId"] for reservation in instances["Reservations"] for instance in reservation["Instances"]}
-
-instance_type = "t2.micro"
-key_pair_name = "stack_devops_kp"
 
 if "MYSTACK-BASTION1" not in existing_instance_ids:
     ec2_client.run_instances(
@@ -590,7 +586,8 @@ if "MYSTACK-BASTION1" not in existing_instance_ids:
         NetworkInterfaces=[{
             "SubnetId": "public_subnet1_id",
             "AssociatePublicIpAddress": True,
-            "Groups": [pub_sg_id]
+            "Groups": [pub_sg_id],
+            "DeviceIndex": 0  # Set DeviceIndex to 0 for primary network interface
         }],
         MinCount=1,
         MaxCount=1,
@@ -608,7 +605,8 @@ if "MYSTACK-BASTION2" not in existing_instance_ids:
         NetworkInterfaces=[{
             "SubnetId": "public_subnet2_id",
             "AssociatePublicIpAddress": True,
-            "Groups": [pub_sg_id]
+            "Groups": [pub_sg_id],
+            "DeviceIndex": 0  # Set DeviceIndex to 0 for primary network interface
         }],
         MinCount=1,
         MaxCount=1,
@@ -617,6 +615,7 @@ if "MYSTACK-BASTION2" not in existing_instance_ids:
             "Tags": [{"Key": "Name", "Value": "MYSTACK-BASTION2"}]
         }]
     )
+
 
 # --- Create Target Group ---
 # List all target groups and filter for 'CLiXX-TG'
