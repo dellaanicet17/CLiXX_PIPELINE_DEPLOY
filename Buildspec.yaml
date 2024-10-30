@@ -34,7 +34,7 @@ phases:
           
           elif [[ $flag == 'deploy_clixx_Ha' ]]; then
             echo "Deploying CLiXX mounted on EFS..."
-            python deploy-clixx-cust-Ha-vpc.py
+            python deploy-clixx-Ha-cust-vpc.py
 
           elif [[ $flag == 'delete' ]]; then
             echo "Deleting Clixx..."
