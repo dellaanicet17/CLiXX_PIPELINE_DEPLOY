@@ -579,15 +579,18 @@ for private_subnet_id in private_subnet_ids:
 instances = ec2_client.describe_instances(Filters=[{"Name": "tag:Name", "Values": ["MYSTACK-BASTION1", "MYSTACK-BASTION2"]}])
 existing_instance_ids = {instance["InstanceId"] for reservation in instances["Reservations"] for instance in reservation["Instances"]}
 
+instance_type = "t2.micro"
+key_pair_name = "stack_devops_kp"
+
 if "MYSTACK-BASTION1" not in existing_instance_ids:
     ec2_client.run_instances(
-        ImageId="ami-id",
-        InstanceType="t2.micro",
-        KeyName="key-pair-name",
+        ImageId=ami_id,
+        InstanceType=instance_type,
+        KeyName=key_pair_name,
         NetworkInterfaces=[{
-            "SubnetId": "subnet1-pub-id",
+            "SubnetId": "public_subnet1_id",
             "AssociatePublicIpAddress": True,
-            "Groups": ["bastion-security-group-id"]
+            "Groups": [pub_sg_id]
         }],
         MinCount=1,
         MaxCount=1,
@@ -599,13 +602,13 @@ if "MYSTACK-BASTION1" not in existing_instance_ids:
 
 if "MYSTACK-BASTION2" not in existing_instance_ids:
     ec2_client.run_instances(
-        ImageId="ami-id",
-        InstanceType="t2.micro",
-        KeyName="key-pair-name",
+        ImageId=ami_id,
+        InstanceType=instance_type,
+        KeyName=key_pair_name,
         NetworkInterfaces=[{
-            "SubnetId": "subnet2-pub-id",
+            "SubnetId": "public_subnet2_id",
             "AssociatePublicIpAddress": True,
-            "Groups": ["bastion-security-group-id"]
+            "Groups": [pub_sg_id]
         }],
         MinCount=1,
         MaxCount=1,
