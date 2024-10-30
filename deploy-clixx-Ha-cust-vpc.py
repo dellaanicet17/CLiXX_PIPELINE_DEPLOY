@@ -738,6 +738,7 @@ DBSubnetGroupName = "mystack-app-db-dbsubnetgroup"
 # Check if the DB instance already exists
 db_instances = rds_client.describe_db_instances()
 db_instance_identifiers = [db['DBInstanceIdentifier'] for db in db_instances['DBInstances']]
+
 if db_instance_identifier in db_instance_identifiers:
     # If the instance exists, print the details and skip restore
     instances = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
@@ -745,18 +746,26 @@ if db_instance_identifier in db_instance_identifiers:
 else:
     # Restore the DB instance from snapshot if it doesn't exist
     print(f"DB Instance '{db_instance_identifier}' not found. Restoring from snapshot...")
-    # Attempt to restore the DB from the snapshot
-    response = rds_client.restore_db_instance_from_db_snapshot(
-        DBInstanceIdentifier=db_instance_identifier,
-        DBSnapshotIdentifier=db_snapshot_identifier,
-        DBInstanceClass=db_instance_class,
-        VpcSecurityGroupIds=[priv_sg_id],
-        DBSubnetGroupName=DBSubnetGroupName,
-        PubliclyAccessible=False,
-        MultiAZ=True,
-        Tags=[{'Key': 'Name', 'Value': 'wordpressdbclixx'}]
-    )
-    print(f"Restore operation initiated. Response: {response}")
+
+    # Check if the snapshot exists first
+    snapshots = rds_client.describe_db_snapshots(DBSnapshotIdentifier=db_snapshot_identifier)
+    snapshot_identifiers = [snap['DBSnapshotIdentifier'] for snap in snapshots['DBSnapshots']]
+    
+    if db_snapshot_identifier in snapshot_identifiers:
+        # Attempt to restore the DB from the snapshot
+        response = rds_client.restore_db_instance_from_db_snapshot(
+            DBInstanceIdentifier=db_instance_identifier,
+            DBSnapshotIdentifier=db_snapshot_identifier,
+            DBInstanceClass=db_instance_class,
+            VpcSecurityGroupIds=[priv_sg_id],
+            DBSubnetGroupName=DBSubnetGroupName,
+            PubliclyAccessible=False,
+            MultiAZ=True,
+            Tags=[{'Key': 'Name', 'Value': 'wordpressdbclixx'}]
+        )
+        print(f"Restore operation initiated. Response: {response}")
+    else:
+        print(f"DB Snapshot '{db_snapshot_identifier}' not found.")
 
 # --- Create Route 53 record for the load balancer ---
 route53_response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
