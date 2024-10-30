@@ -769,15 +769,18 @@ else:
 
 # --- Create Route 53 record for the load balancer ---
 route53_response = route53_client.list_resource_record_sets(
-    HostedZoneId=hosted_zone_id
-)
+    HostedZoneId=hosted_zone_id)
 # Check if the record already exists
-record_exists = any(record['Name'] == record_name for record in route53_response['ResourceRecordSets'])
+record_exists = any(record['Name'] == record_name and record['Type'] == 'A' for record in route53_response['ResourceRecordSets'])
+
 if not record_exists:
     # Fetch the load balancer details if it doesn't exist
     load_balancer_details = elbv2_client.describe_load_balancers(LoadBalancerArns=[load_balancer_arn])
+    
     if load_balancer_details['LoadBalancers']:
         load_balancer_info = load_balancer_details['LoadBalancers'][0]
+        
+        # Create the Route 53 record
         route53_client.change_resource_record_sets(
             HostedZoneId=hosted_zone_id,
             ChangeBatch={
