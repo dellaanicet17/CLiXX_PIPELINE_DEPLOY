@@ -98,7 +98,7 @@ if not public_subnet1['Subnets']:
     print(f"Public Subnet created: {public_subnet1.id} with Name tag 'MYSTACKPUBSUB1'")
 else:
     print(f"Public Subnet already exists with CIDR block {pub_sub1_cidr_block}")
-public_subnet1_id = public_subnet1['Subnets'][0]['SubnetId'] if public_subnet1['Subnets'] else public_subnet1.id
+public_subnet1_id = public_subnet1['Subnets'][0]['SubnetId'] if public_subnet1['Subnets'] else public_subnet1['Subnet']['SubnetId']
 
 public_subnet2 = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [pub_sub2_cidr_block]}])
 if not public_subnet1['Subnets']:
@@ -107,7 +107,7 @@ if not public_subnet1['Subnets']:
     print(f"Public Subnet created: {public_subnet2.id} with Name tag 'MYSTACKPUBSUB2'")
 else:
     print(f"Public Subnet already exists with CIDR block {pub_sub2_cidr_block}")
-public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId'] if public_subnet2['Subnets'] else public_subnet2.id
+public_subnet2_id = public_subnet2['Subnets'][0]['SubnetId'] if public_subnet2['Subnets'] else public_subnet2['Subnet']['SubnetId']
 
 # Create Private Subnets for Web Application
 private_subnet1_webapp = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_webapp]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
@@ -117,7 +117,7 @@ if not private_subnet1_webapp['Subnets']:
     print(f"Private Subnet created: {private_subnet1_webapp.id} with Name tag 'MYSTACKPRIVSUB1-WEBAPP'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_webapp}")
-private_subnet1_webapp_id = private_subnet1_webapp['Subnets'][0]['SubnetId'] if private_subnet1_webapp['Subnets'] else private_subnet1_webapp.id
+private_subnet1_webapp_id = private_subnet1_webapp['Subnets'][0]['SubnetId'] if private_subnet1_webapp['Subnets'] else private_subnet1_webapp['Subnet']['SubnetId']
 
 private_subnet2_webapp = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_webapp]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if not private_subnet2_webapp['Subnets']:
@@ -126,7 +126,7 @@ if not private_subnet2_webapp['Subnets']:
     print(f"Private Subnet created: {private_subnet2_webapp.id} with Name tag 'MYSTACKPRIVSUB2-WEBAPP'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub2_cidr_block_webapp}")
-private_subnet2_webapp_id = private_subnet2_webapp['Subnets'][0]['SubnetId'] if private_subnet2_webapp['Subnets'] else private_subnet2_webapp.id
+private_subnet2_webapp_id = private_subnet2_webapp['Subnets'][0]['SubnetId'] if private_subnet2_webapp['Subnets'] else private_subnet2_webapp['Subnet']['SubnetId']
 
 # Create Private Subnets for Application Databases
 private_subnet1_app_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_app_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
@@ -136,7 +136,7 @@ if not private_subnet1_app_db['Subnets']:
     print(f"Private Subnet created: {private_subnet1_app_db.id} with Name tag 'MYSTACKPRIVSUB1-APPDB'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_app_db}")
-private_subnet1_app_db_id = private_subnet1_app_db['Subnets'][0]['SubnetId'] if private_subnet1_app_db['Subnets'] else private_subnet1_app_db.id
+private_subnet1_app_db_id = private_subnet1_app_db['Subnets'][0]['SubnetId'] if private_subnet1_app_db['Subnets'] else private_subnet1_app_db['Subnet']['SubnetId']
 
 private_subnet2_app_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_app_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if not private_subnet2_app_db['Subnets']:
@@ -145,7 +145,7 @@ if not private_subnet2_app_db['Subnets']:
     print(f"Private Subnet created: {private_subnet2_app_db.id} with Name tag 'MYSTACKPRIVSUB2-APPDB'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub2_cidr_block_app_db}")
-private_subnet2_app_db_id = private_subnet2_app_db['Subnets'][0]['SubnetId'] if private_subnet2_app_db['Subnets'] else private_subnet2_app_db.id
+private_subnet2_app_db_id = private_subnet2_app_db['Subnets'][0]['SubnetId'] if private_subnet2_app_db['Subnets'] else private_subnet2_app_db['Subnet']['SubnetId']
 
 # Create Private Subnets for Oracle Databases
 private_subnet1_oracle_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_oracle_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
@@ -155,7 +155,7 @@ if not private_subnet1_oracle_db['Subnets']:
     print(f"Private Subnet created: {private_subnet1_oracle_db.id} with Name tag 'MYSTACKPRIVSUB1-ORADB'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_oracle_db}")
-private_subnet1_oracle_db_id = private_subnet1_oracle_db['Subnets'][0]['SubnetId'] if private_subnet1_oracle_db['Subnets'] else private_subnet1_oracle_db.id
+private_subnet1_oracle_db_id = private_subnet1_oracle_db['Subnets'][0]['SubnetId'] if private_subnet1_oracle_db['Subnets'] else private_subnet1_oracle_db['Subnet']['SubnetId']
 
 private_subnet2_oracle_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_oracle_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if not private_subnet2_oracle_db['Subnets']:
@@ -164,7 +164,7 @@ if not private_subnet2_oracle_db['Subnets']:
     print(f"Private Subnet created: {private_subnet2_oracle_db.id} with Name tag 'MYSTACKPRIVSUB2-ORADB'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub2_cidr_block_oracle_db}")
-private_subnet2_oracle_db_id = private_subnet2_oracle_db['Subnets'][0]['SubnetId'] if private_subnet2_oracle_db['Subnets'] else private_subnet2_oracle_db.id
+private_subnet2_oracle_db_id = private_subnet2_oracle_db['Subnets'][0]['SubnetId'] if private_subnet2_oracle_db['Subnets'] else private_subnet2_oracle_db['Subnet']['SubnetId']
 
 # Create Private Subnets for Java Application and Databases
 private_subnet1_java_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_java_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
@@ -174,7 +174,7 @@ if not private_subnet1_java_db['Subnets']:
     print(f"Private Subnet created: {private_subnet1_java_db.id} with Name tag 'MYSTACKPRIVSUB1-JAVADB'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_java_db}")
-private_subnet1_java_db_id = private_subnet1_java_db['Subnets'][0]['SubnetId'] if private_subnet1_java_db['Subnets'] else private_subnet1_java_db.id
+private_subnet1_java_db_id = private_subnet1_java_db['Subnets'][0]['SubnetId'] if private_subnet1_java_db['Subnets'] else private_subnet1_java_db['Subnet']['SubnetId']
 
 private_subnet2_java_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_java_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if not private_subnet2_java_db['Subnets']:
@@ -183,7 +183,7 @@ if not private_subnet2_java_db['Subnets']:
     print(f"Private Subnet created: {private_subnet2_java_db.id} with Name tag 'MYSTACKPRIVSUB2-JAVADB'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub2_cidr_block_java_db}")
-private_subnet2_java_db_id = private_subnet2_java_db['Subnets'][0]['SubnetId'] if private_subnet2_java_db['Subnets'] else private_subnet2_java_db.id
+private_subnet2_java_db_id = private_subnet2_java_db['Subnets'][0]['SubnetId'] if private_subnet2_java_db['Subnets'] else private_subnet2_java_db['Subnet']['SubnetId']
 
 private_subnet1_java_app = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_java_app]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if not private_subnet1_java_app['Subnets']:
@@ -192,7 +192,7 @@ if not private_subnet1_java_app['Subnets']:
     print(f"Private Subnet created: {private_subnet1_java_app.id} with Name tag 'MYSTACKPRIVSUB1-JAVAAPP'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_java_app}")
-private_subnet1_java_app_id = private_subnet1_java_app['Subnets'][0]['SubnetId'] if private_subnet1_java_app['Subnets'] else private_subnet1_java_app.id
+private_subnet1_java_app_id = private_subnet1_java_app['Subnets'][0]['SubnetId'] if private_subnet1_java_app['Subnets'] else private_subnet1_java_app['Subnet']['SubnetId']
 
 private_subnet2_java_app = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_java_app]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if not private_subnet2_java_app['Subnets']:
@@ -201,7 +201,7 @@ if not private_subnet2_java_app['Subnets']:
     print(f"Private Subnet created: {private_subnet2_java_app.id} with Name tag 'MYSTACKPRIVSUB2-JAVAAPP'")
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub2_cidr_block_java_app}")
-private_subnet2_java_app_id = private_subnet2_java_app['Subnets'][0]['SubnetId'] if private_subnet2_java_app['Subnets'] else private_subnet2_java_app.id
+private_subnet2_java_app_id = private_subnet2_java_app['Subnets'][0]['SubnetId'] if private_subnet2_java_app['Subnets'] else private_subnet2_java_app['Subnet']['SubnetId']
 
 # --- Internet Gateway ---
 internet_gateway = ec2_client.describe_internet_gateways(Filters=[{'Name': 'attachment.vpc-id', 'Values': [vpc_id]}])
@@ -212,7 +212,7 @@ if not internet_gateway['InternetGateways']:
     print(f"Internet Gateway created: {igw.id} with Name tag 'MYSTACKIGW'")
 else:
     print(f"Internet Gateway already exists for VPC {vpc_id}")
-internet_gateway_id = internet_gateway['InternetGateways'][0]['InternetGatewayId'] if internet_gateway['InternetGateways'] else igw.id
+internet_gateway_id = internet_gateway['InternetGateways'][0]['InternetGatewayId'] if internet_gateway['InternetGateways'] else igw['InternetGateways']['InternetGatewayId']
 
 # --- Elastic IPs for NAT Gateways ---
 nat_eip1 = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP1']}])
@@ -222,7 +222,7 @@ if not nat_eip1['Addresses']:
     print(f"NAT Elastic IP created: {nat_eip1.id} with Name tag 'MYSTACKNAT-EIP1'")
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP1'")
-nat_eip1_id = nat_eip1['Addresses'][0]['AllocationId'] if nat_eip1['Addresses'] else nat_eip1.id
+nat_eip1_id = nat_eip1['Addresses'][0]['AllocationId'] if nat_eip1['Addresses'] else nat_eip1['Addresses']['AllocationId']
 
 nat_eip2 = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP2']}])
 if not nat_eip2['Addresses']:
@@ -231,7 +231,7 @@ if not nat_eip2['Addresses']:
     print(f"NAT Elastic IP created: {nat_eip2.id} with Name tag 'MYSTACKNAT-EIP2'")
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP2'")
-nat_eip2_id = nat_eip2['Addresses'][0]['AllocationId'] if nat_eip2['Addresses'] else nat_eip2.id
+nat_eip2_id = nat_eip2['Addresses'][0]['AllocationId'] if nat_eip2['Addresses'] else nat_eip2['Addresses']['AllocationId']
 
 # --- NAT Gateways ---
 nat_gateway1 = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
@@ -241,7 +241,7 @@ if not nat_gateway1['NatGateways']:
     print(f"NAT Gateway created: {nat_gateway1.id} with Name tag 'MYSTACKNAT-GW1'")
 else:
     print(f"NAT Gateway already exists in subnet {public_subnet1_id}")
-nat_gateway1_id = nat_gateway1['NatGateways'][0]['NatGatewayId'] if nat_gateway1['NatGateways'] else nat_gateway1.id
+nat_gateway1_id = nat_gateway1['NatGateways'][0]['NatGatewayId'] if nat_gateway1['NatGateways'] else nat_gateway1['NatGateways']['NatGatewayId']
 
 nat_gateway2 = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet2_id]}])
 if not nat_gateway2['NatGateways']:
@@ -250,10 +250,9 @@ if not nat_gateway2['NatGateways']:
     print(f"NAT Gateway created: {nat_gateway2.id} with Name tag 'MYSTACKNAT-GW2'")
 else:
     print(f"NAT Gateway already exists in subnet {public_subnet2_id}")
-nat_gateway2_id = nat_gateway2['NatGateways'][0]['NatGatewayId'] if nat_gateway2['NatGateways'] else nat_gateway2.id
+nat_gateway2_id = nat_gateway2['NatGateways'][0]['NatGatewayId'] if nat_gateway2['NatGateways'] else nat_gateway2['NatGateways']['NatGatewayId']
 
 # --- Public Route Tables ---
-
 # Public Route Table 1
 pub_rt1 = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT1']}])
 if not pub_rt1['RouteTables']:
@@ -263,7 +262,7 @@ if not pub_rt1['RouteTables']:
     print(f"Public Route Table 1 created: {pub_rt1.id} with Name tag 'MYSTACKPUB-RT1'")
 else:
     print(f"Public Route Table 1 already exists: {pub_rt1['RouteTables'][0]['RouteTableId']}")
-pub_rt1_id = pub_rt1['RouteTables'][0]['RouteTableId'] if pub_rt1['RouteTables'] else pub_rt1.id
+pub_rt1_id = pub_rt1['RouteTables'][0]['RouteTableId'] if pub_rt1['RouteTables'] else pub_rt1['RouteTables']['RouteTableId']
 
 # Public Route Table 2
 pub_rt2 = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT2']}])
@@ -274,7 +273,7 @@ if not pub_rt2['RouteTables']:
     print(f"Public Route Table 2 created: {pub_rt2.id} with Name tag 'MYSTACKPUB-RT2'")
 else:
     print(f"Public Route Table 2 already exists: {pub_rt2['RouteTables'][0]['RouteTableId']}")
-pub_rt2_id = pub_rt2['RouteTables'][0]['RouteTableId'] if pub_rt2['RouteTables'] else pub_rt2.id
+pub_rt2_id = pub_rt2['RouteTables'][0]['RouteTableId'] if pub_rt2['RouteTables'] else pub_rt2['RouteTables']['RouteTableId']
 
 # --- Route Table Associations for Public Route Table 1 ---
 assoc_pub_rt1 = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt1_id]}, {'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
@@ -293,7 +292,6 @@ else:
     print(f"Route Table Association already exists for Public Route Table 2 and subnet {public_subnet2_id}")
 
 # --- Private Route Tables ---
-
 # Private Route Table 1
 priv_rt1 = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPRIV-RT1']}])
 if not priv_rt1['RouteTables']:
@@ -302,7 +300,7 @@ if not priv_rt1['RouteTables']:
     print(f"Private Route Table 1 created: {priv_rt1.id} with Name tag 'MYSTACKPRIV-RT1'")
 else:
     print(f"Private Route Table 1 already exists: {priv_rt1['RouteTables'][0]['RouteTableId']}")
-priv_rt1_id = priv_rt1['RouteTables'][0]['RouteTableId'] if priv_rt1['RouteTables'] else priv_rt1.id
+priv_rt1_id = priv_rt1['RouteTables'][0]['RouteTableId'] if priv_rt1['RouteTables'] else priv_rt1['RouteTables']['RouteTableId']
 
 # --- Route Table Associations for Private Route Table 1 --- private_subnet1_app_db
 for subnet_id in [private_subnet1_webapp_id, private_subnet1_app_db_id, private_subnet1_oracle_db_id, private_subnet1_java_db_id, private_subnet1_java_app_id]:
@@ -321,8 +319,7 @@ if not priv_rt2['RouteTables']:
     print(f"Private Route Table 2 created: {priv_rt2.id} with Name tag 'MYSTACKPRIV-RT2'")
 else:
     print(f"Private Route Table 2 already exists: {priv_rt2['RouteTables'][0]['RouteTableId']}")
-priv_rt2_id = priv_rt2['RouteTables'][0]['RouteTableId'] if priv_rt2['RouteTables'] else priv_rt2.id
-
+priv_rt2_id = priv_rt2['RouteTables'][0]['RouteTableId'] if priv_rt2['RouteTables'] else priv_rt2['RouteTables']['RouteTableId']
 # --- Route Table Associations for Private Route Table 2 ---
 for subnet_id in [private_subnet2_webapp_id, private_subnet2_app_db_id, private_subnet2_oracle_db_id, private_subnet2_java_db_id, private_subnet2_java_app_id]:
     assoc_priv_rt2 = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt2_id]}, {'Name': 'subnet-id', 'Values': [subnet_id]}])
