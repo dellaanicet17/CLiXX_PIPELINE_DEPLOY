@@ -665,13 +665,20 @@ if target_group_arn is None:
 # List all load balancers
 all_lb_response = elbv2_client.describe_load_balancers()
 load_balancers = all_lb_response['LoadBalancers']
+
 # Check if 'CLiXX-LB' exists in the list of load balancers
 load_balancer_arn = None
+load_balancer_dns = None
+canonical_hosted_zone_id = None
+
 for lb in load_balancers:
     if lb['LoadBalancerName'] == 'CLiXX-LB':
         load_balancer_arn = lb['LoadBalancerArn']
+        load_balancer_dns = lb['DNSName']
+        canonical_hosted_zone_id = lb['CanonicalHostedZoneId']
         print(f"Load Balancer already exists with ARN: {load_balancer_arn}")
         break
+
 if load_balancer_arn is None:
     # Load balancer does not exist, create a new one
     print("Load Balancer 'CLiXX-LB' not found. Creating a new load balancer.")
@@ -682,17 +689,13 @@ if load_balancer_arn is None:
         Scheme='internet-facing',
         IpAddressType='ipv4',
         Tags=[
-            {
-                'Key': 'Name',
-                'Value': 'CLiXX-LB'
-            },
-            {
-                'Key': 'Environment',
-                'Value': 'dev'
-            }
+            {'Key': 'Name', 'Value': 'CLiXX-LB'},
+            {'Key': 'Environment', 'Value': 'dev'}
         ]
     )
     load_balancer_arn = load_balancer['LoadBalancers'][0]['LoadBalancerArn']
+    load_balancer_dns = load_balancer['LoadBalancers'][0]['DNSName']
+    canonical_hosted_zone_id = load_balancer['LoadBalancers'][0]['CanonicalHostedZoneId']
     print(f"Load Balancer created with ARN: {load_balancer_arn}")
 
 #Create Listener for the Load Balancer (HTTP & HTTPS)
@@ -756,10 +759,9 @@ else:
     print(f"Restore operation initiated. Response: {response}")
 
 # --- Create Route 53 record for the load balancer ---
-route53_response = route53_client.list_resource_record_sets(
-    HostedZoneId=hosted_zone_id
-)
-# Check if the record already exists using a broader approach
+route53_response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+
+# Check if the record already exists
 record_exists = any(record['Name'] == record_name for record in route53_response['ResourceRecordSets'])
 if not record_exists:
     route53_client.change_resource_record_sets(
@@ -772,8 +774,8 @@ if not record_exists:
                     'Name': record_name,
                     'Type': 'A',
                     'AliasTarget': {
-                        'HostedZoneId': load_balancer['LoadBalancers'][0]['CanonicalHostedZoneId'],
-                        'DNSName': load_balancer['LoadBalancers'][0]['DNSName'],
+                        'HostedZoneId': canonical_hosted_zone_id,
+                        'DNSName': load_balancer_dns,
                         'EvaluateTargetHealth': False
                     }
                 }
