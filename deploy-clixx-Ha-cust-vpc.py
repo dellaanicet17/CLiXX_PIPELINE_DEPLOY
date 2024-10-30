@@ -455,12 +455,15 @@ else:
 
 # Check if Private Security Group exists
 priv_sg_response = ec2_client.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [priv_sg_name]}])
-priv_sg_id = priv_sg_response['SecurityGroups'][0]['GroupId'] if priv_sg_response['SecurityGroups'] else None
+priv_sg_id = priv_sg_response['SecurityGroups'][0]['GroupId'] if 'SecurityGroups' in priv_sg_response and priv_sg_response['SecurityGroups'] else None
 
 if priv_sg_id is None:
+    # Create Private Security Group
     priv_sg_response = ec2_client.create_security_group(GroupName=priv_sg_name, Description='Private Security Group', VpcId=vpc_id)
     priv_sg_id = priv_sg_response['GroupId']
     print(f"Created Private Security Group with ID: {priv_sg_id}")  # Print Private SG ID
+
+    # Authorize ingress rules for the security group
     ec2_client.authorize_security_group_ingress(GroupId=priv_sg_id, IpPermissions=[
         {'IpProtocol': 'tcp', 'FromPort': 22, 'ToPort': 22, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
         {'IpProtocol': 'icmp', 'FromPort': -1, 'ToPort': -1, 'UserIdGroupPairs': [{'GroupId': bastion_sg_id}]},
@@ -469,9 +472,12 @@ if priv_sg_id is None:
         {'IpProtocol': 'tcp', 'FromPort': 443, 'ToPort': 443, 'UserIdGroupPairs': [{'GroupId': pub_sg_id}]},
         {'IpProtocol': 'tcp', 'FromPort': 80, 'ToPort': 80, 'UserIdGroupPairs': [{'GroupId': pub_sg_id}]}
     ])
+
+    # Tag the security group
     ec2_client.create_tags(Resources=[priv_sg_id], Tags=[{'Key': 'Name', 'Value': priv_sg_name}])
 else:
     print(f"Private Security Group already exists with ID: {priv_sg_id}")  # Print existing Private SG ID
+
 
 # --- Check DB Subnet Groups ---
 db_subnet_groups = rds_client.describe_db_subnet_groups()
