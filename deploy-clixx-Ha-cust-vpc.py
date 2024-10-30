@@ -1021,7 +1021,7 @@ else:
         MinSize=1,
         MaxSize=3,
         DesiredCapacity=1,
-        VPCZoneIdentifier=[private_subnet1_webapp_id,private_subnet2_webapp_id],
+        VPCZoneIdentifier=f"{private_subnet1_webapp_id},{private_subnet2_webapp_id}",  # Join subnets as a string
         TargetGroupARNs=[target_group_arn], 
         Tags=[
             {
@@ -1032,4 +1032,5 @@ else:
         ]
     )
     print("Auto Scaling Group created successfully.")
+
 
