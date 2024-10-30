@@ -586,16 +586,17 @@ for private_subnet_id in private_subnet_ids:
 instances = ec2_client.describe_instances(Filters=[{"Name": "tag:Name", "Values": ["MYSTACK-BASTION1", "MYSTACK-BASTION2"]}])
 existing_instance_ids = {instance["InstanceId"] for reservation in instances["Reservations"] for instance in reservation["Instances"]}
 
+# Launch MYSTACK-BASTION1 if it doesn't already exist
 if "MYSTACK-BASTION1" not in existing_instance_ids:
     ec2_client.run_instances(
         ImageId=ami_id,
         InstanceType=instance_type,
         KeyName=key_pair_name,
         NetworkInterfaces=[{
-            "SubnetId": "public_subnet1_id",
+            "SubnetId": public_subnet1_id,  # Use variable directly
             "AssociatePublicIpAddress": True,
-            "Groups": [pub_sg_id],
-            "DeviceIndex": 0  # Set DeviceIndex to 0 for primary network interface
+            "DeviceIndex": 0,  # Specify device index for primary network interface
+            "Groups": [pub_sg_id]
         }],
         MinCount=1,
         MaxCount=1,
@@ -605,16 +606,17 @@ if "MYSTACK-BASTION1" not in existing_instance_ids:
         }]
     )
 
+# Launch MYSTACK-BASTION2 if it doesn't already exist
 if "MYSTACK-BASTION2" not in existing_instance_ids:
     ec2_client.run_instances(
         ImageId=ami_id,
         InstanceType=instance_type,
         KeyName=key_pair_name,
         NetworkInterfaces=[{
-            "SubnetId": "public_subnet2_id",
+            "SubnetId": public_subnet2_id,  # Use variable directly
             "AssociatePublicIpAddress": True,
-            "Groups": [pub_sg_id],
-            "DeviceIndex": 0  # Set DeviceIndex to 0 for primary network interface
+            "DeviceIndex": 0,  # Specify device index for primary network interface
+            "Groups": [pub_sg_id]
         }],
         MinCount=1,
         MaxCount=1,
@@ -623,7 +625,6 @@ if "MYSTACK-BASTION2" not in existing_instance_ids:
             "Tags": [{"Key": "Name", "Value": "MYSTACK-BASTION2"}]
         }]
     )
-
 
 # --- Create Target Group ---
 # List all target groups and filter for 'CLiXX-TG'
