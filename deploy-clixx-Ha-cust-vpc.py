@@ -478,13 +478,13 @@ db_subnet_groups = rds_client.describe_db_subnet_groups()
 existing_subnet_group_names = {group["DBSubnetGroupName"] for group in db_subnet_groups["DBSubnetGroups"]}
 
 # Create MySQL DB Subnet Group if it does not exist
-if "mystack-app_db-dbsubnetgroup" not in existing_subnet_group_names:
+if "mystack-app-db-dbsubnetgroup" not in existing_subnet_group_names:
     rds_client.create_db_subnet_group(
         DBSubnetGroupName="mystack-app-db-dbsubnetgroup",  # Fixed the naming
         DBSubnetGroupDescription="MySQL application database subnet group",  # Add a description
         SubnetIds=[
-            "private_subnet1_app_db_id", 
-            "private_subnet2_app_db_id",
+            private_subnet1_app_db_id,  # Use the actual variable for subnet ID
+            private_subnet2_app_db_id,
         ],
         Tags=[{"Key": "Name", "Value": "MYSTACK-RDS-DBSUBNETGROUP"}],
     )
@@ -496,8 +496,8 @@ if "mystack-oracle-dbsubnetgroup" not in existing_subnet_group_names:
         DBSubnetGroupName="mystack-oracle-dbsubnetgroup",
         DBSubnetGroupDescription="Oracle database subnet group",  # Add a description
         SubnetIds=[
-            "private_subnet1_oracle_db_id",
-            "private_subnet2_oracle_db_id",
+            private_subnet1_oracle_db_id,  # Use the actual variable for subnet ID
+            private_subnet2_oracle_db_id,
         ],
         Tags=[{"Key": "Name", "Value": "MYSTACK-ORACLE-DBSUBNETGROUP"}],
     )
@@ -509,12 +509,13 @@ if "mystack-java_db-dbsubnetgroup" not in existing_subnet_group_names:
         DBSubnetGroupName="mystack-java_db-dbsubnetgroup",
         DBSubnetGroupDescription="Java application database subnet group",  # Add a description
         SubnetIds=[
-            "private_subnet1_java_db_id",
-            "private_subnet2_java_db_id",
+            private_subnet1_java_db_id,  # Use the actual variable for subnet ID
+            private_subnet2_java_db_id,
         ],
         Tags=[{"Key": "Name", "Value": "MYSTACK-JAVA_DB-DBSUBNETGROUP"}],
     )
     print("Created Java application DB Subnet Group.")
+
 
 # --- Check EFS Setup ---
 efs_file_systems = efs_client.describe_file_systems()
