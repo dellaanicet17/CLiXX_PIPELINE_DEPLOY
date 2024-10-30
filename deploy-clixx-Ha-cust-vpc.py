@@ -767,14 +767,23 @@ else:
     else:
         print(f"DB Snapshot '{db_snapshot_identifier}' not found.")
 
-# --- Create Route 53 record for the load balancer ---
+# Define the record name and hosted zone ID
+record_name = 'test.clixx-wdella.com.'
+hosted_zone_id = 'Z022607324NJ585R59I5F'
+
+# --- Check if the record already exists ---
 route53_response = route53_client.list_resource_record_sets(
-    HostedZoneId=hosted_zone_id)
+    HostedZoneId=hosted_zone_id
+)
+
 # Check if the record already exists
-record_exists = any(record['Name'] == record_name and record['Type'] == 'A' for record in route53_response['ResourceRecordSets'])
+record_exists = any(
+    record['Name'] == record_name and record['Type'] == 'A'
+    for record in route53_response['ResourceRecordSets']
+)
 
 if not record_exists:
-    # Fetch the load balancer details if it doesn't exist
+    # Fetch load balancer details
     load_balancer_details = elbv2_client.describe_load_balancers(LoadBalancerArns=[load_balancer_arn])
     
     if load_balancer_details['LoadBalancers']:
@@ -803,7 +812,8 @@ if not record_exists:
     else:
         print("Load balancer details not found.")
 else:
-    print(f"Route 53 record already exists for {record_name}")
+    print(f"Route 53 record already exists for {record_name}.")
+
 
 # Define user_data_script with dynamic variables
 efs_name = "CLiXX-EFS"
