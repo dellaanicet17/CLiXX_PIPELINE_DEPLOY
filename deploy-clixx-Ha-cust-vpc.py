@@ -132,7 +132,9 @@ else:
     private_subnet2_webapp_id = private_subnet2_webapp['Subnets'][0]['SubnetId']  # Assign existing subnet ID
     print(f"Private Subnet already exists with CIDR block {priv_sub2_cidr_block_webapp}, ID: {private_subnet2_webapp_id}")
 
+
 # Create Private Subnets for Application Databases
+# Creating first private subnet
 private_subnet1_app_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_app_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if 'Subnets' not in private_subnet1_app_db or not private_subnet1_app_db['Subnets']:
     private_subnet1_app_db = ec2_client.create_subnet(VpcId=vpc_id, CidrBlock=priv_sub1_cidr_block_app_db, AvailabilityZone=priv_az_1)
@@ -142,7 +144,7 @@ if 'Subnets' not in private_subnet1_app_db or not private_subnet1_app_db['Subnet
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_app_db}")
     private_subnet1_app_db_id = private_subnet1_app_db['Subnets'][0]['SubnetId']
-
+# Creating second private subnet
 private_subnet2_app_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_app_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if 'Subnets' not in private_subnet2_app_db or not private_subnet2_app_db['Subnets']:
     private_subnet2_app_db = ec2_client.create_subnet(VpcId=vpc_id, CidrBlock=priv_sub2_cidr_block_app_db, AvailabilityZone=priv_az_2)
@@ -152,6 +154,11 @@ if 'Subnets' not in private_subnet2_app_db or not private_subnet2_app_db['Subnet
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub2_cidr_block_app_db}")
     private_subnet2_app_db_id = private_subnet2_app_db['Subnets'][0]['SubnetId']
+
+# Debug output to verify subnet IDs before creating DB Subnet Group
+print(f"Private Subnet 1 ID: {private_subnet1_app_db_id}")
+print(f"Private Subnet 2 ID: {private_subnet2_app_db_id}")
+
 
 # Create Private Subnets for Oracle Databases
 private_subnet1_oracle_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub1_cidr_block_oracle_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
@@ -163,7 +170,6 @@ if 'Subnets' not in private_subnet1_oracle_db or not private_subnet1_oracle_db['
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_oracle_db}")
     private_subnet1_oracle_db_id = private_subnet1_oracle_db['Subnets'][0]['SubnetId']
-
 private_subnet2_oracle_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_oracle_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if 'Subnets' not in private_subnet2_oracle_db or not private_subnet2_oracle_db['Subnets']:
     private_subnet2_oracle_db = ec2_client.create_subnet(VpcId=vpc_id, CidrBlock=priv_sub2_cidr_block_oracle_db, AvailabilityZone=priv_az_2)
@@ -184,7 +190,6 @@ if 'Subnets' not in private_subnet1_java_db or not private_subnet1_java_db['Subn
 else:
     print(f"Private Subnet already exists with CIDR block {priv_sub1_cidr_block_java_db}")
     private_subnet1_java_db_id = private_subnet1_java_db['Subnets'][0]['SubnetId']
-
 private_subnet2_java_db = ec2_client.describe_subnets(Filters=[{'Name': 'cidrBlock', 'Values': [priv_sub2_cidr_block_java_db]}, {'Name': 'vpc-id', 'Values': [vpc_id]}])
 if 'Subnets' not in private_subnet2_java_db or not private_subnet2_java_db['Subnets']:
     private_subnet2_java_db = ec2_client.create_subnet(VpcId=vpc_id, CidrBlock=priv_sub2_cidr_block_java_db, AvailabilityZone=priv_az_2)
