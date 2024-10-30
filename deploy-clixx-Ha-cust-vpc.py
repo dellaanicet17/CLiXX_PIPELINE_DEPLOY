@@ -282,7 +282,6 @@ else:
     print(f"NAT Gateway already exists with Name tag 'MYSTACKNAT-GW2'")
     nat_gateway2_id = nat_gateway2_response['NatGateways'][0]['NatGatewayId']
 
-
 # --- Public Route Tables ---
 # Public Route Table 1
 pub_rt1_response = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT1']}])
@@ -295,7 +294,6 @@ if not pub_rt1_response['RouteTables']:
 else:
     print(f"Public Route Table 1 already exists: {pub_rt1_response['RouteTables'][0]['RouteTableId']}")
     pub_rt1_id = pub_rt1_response['RouteTables'][0]['RouteTableId']
-
 # Public Route Table 2
 pub_rt2_response = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT2']}])
 if not pub_rt2_response['RouteTables']:
@@ -309,20 +307,28 @@ else:
     pub_rt2_id = pub_rt2_response['RouteTables'][0]['RouteTableId']
 
 # --- Route Table Associations for Public Route Table 1 ---
-assoc_pub_rt1_response = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt1_id]}, {'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
-if not assoc_pub_rt1_response['Associations']:
-    ec2_client.create_route_table_association(SubnetId=public_subnet1_id, RouteTableId=pub_rt1_id)
-    print(f"Route Table Association created for Public Route Table 1 and subnet {public_subnet1_id}")
+assoc_pub_rt1_response = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt1_id]}])
+if assoc_pub_rt1_response['RouteTables']:
+    associations = assoc_pub_rt1_response['RouteTables'][0].get('Associations', [])
+    if not any(assoc['SubnetId'] == public_subnet1_id for assoc in associations):
+        ec2_client.create_route_table_association(SubnetId=public_subnet1_id, RouteTableId=pub_rt1_id)
+        print(f"Route Table Association created for Public Route Table 1 and subnet {public_subnet1_id}")
+    else:
+        print(f"Route Table Association already exists for Public Route Table 1 and subnet {public_subnet1_id}")
 else:
-    print(f"Route Table Association already exists for Public Route Table 1 and subnet {public_subnet1_id}")
+    print(f"No Route Table found with ID: {pub_rt1_id}")
 
 # --- Route Table Associations for Public Route Table 2 ---
-assoc_pub_rt2_response = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt2_id]}, {'Name': 'subnet-id', 'Values': [public_subnet2_id]}])
-if not assoc_pub_rt2_response['Associations']:
-    ec2_client.create_route_table_association(SubnetId=public_subnet2_id, RouteTableId=pub_rt2_id)
-    print(f"Route Table Association created for Public Route Table 2 and subnet {public_subnet2_id}")
+assoc_pub_rt2_response = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt2_id]}])
+if assoc_pub_rt2_response['RouteTables']:
+    associations = assoc_pub_rt2_response['RouteTables'][0].get('Associations', [])
+    if not any(assoc['SubnetId'] == public_subnet2_id for assoc in associations):
+        ec2_client.create_route_table_association(SubnetId=public_subnet2_id, RouteTableId=pub_rt2_id)
+        print(f"Route Table Association created for Public Route Table 2 and subnet {public_subnet2_id}")
+    else:
+        print(f"Route Table Association already exists for Public Route Table 2 and subnet {public_subnet2_id}")
 else:
-    print(f"Route Table Association already exists for Public Route Table 2 and subnet {public_subnet2_id}")
+    print(f"No Route Table found with ID: {pub_rt2_id}")
 
 # --- Private Route Tables ---
 # Private Route Table 1
@@ -336,14 +342,18 @@ else:
     print(f"Private Route Table 1 already exists: {priv_rt1_response['RouteTables'][0]['RouteTableId']}")
     priv_rt1_id = priv_rt1_response['RouteTables'][0]['RouteTableId']
 
-# --- Route Table Associations for Private Route Table 1 --- private_subnet1_app_db
+# --- Route Table Associations for Private Route Table 1 ---
 for subnet_id in [private_subnet1_webapp_id, private_subnet1_app_db_id, private_subnet1_oracle_db_id, private_subnet1_java_db_id, private_subnet1_java_app_id]:
-    assoc_priv_rt1_response = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt1_id]}, {'Name': 'subnet-id', 'Values': [subnet_id]}])
-    if not assoc_priv_rt1_response['Associations']:
-        ec2_client.create_route_table_association(SubnetId=subnet_id, RouteTableId=priv_rt1_id)
-        print(f"Route Table Association created for Private Route Table 1 and subnet {subnet_id}")
+    assoc_priv_rt1_response = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt1_id]}])
+    if assoc_priv_rt1_response['RouteTables']:
+        associations = assoc_priv_rt1_response['RouteTables'][0].get('Associations', [])
+        if not any(assoc['SubnetId'] == subnet_id for assoc in associations):
+            ec2_client.create_route_table_association(SubnetId=subnet_id, RouteTableId=priv_rt1_id)
+            print(f"Route Table Association created for Private Route Table 1 and subnet {subnet_id}")
+        else:
+            print(f"Route Table Association already exists for Private Route Table 1 and subnet {subnet_id}")
     else:
-        print(f"Route Table Association already exists for Private Route Table 1 and subnet {subnet_id}")
+        print(f"No Route Table found with ID: {priv_rt1_id}")
 
 # Private Route Table 2
 priv_rt2_response = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPRIV-RT2']}])
@@ -358,25 +368,31 @@ else:
 
 # --- Route Table Associations for Private Route Table 2 ---
 for subnet_id in [private_subnet2_webapp_id, private_subnet2_app_db_id, private_subnet2_oracle_db_id, private_subnet2_java_db_id, private_subnet2_java_app_id]:
-    assoc_priv_rt2 = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt2_id]}, {'Name': 'subnet-id', 'Values': [subnet_id]}])
-    if not assoc_priv_rt2['Associations']:
-        ec2_client.create_route_table_association(SubnetId=subnet_id, RouteTableId=priv_rt2_id)
-        print(f"Route Table Association created for Private Route Table 2 and subnet {subnet_id}")
+    assoc_priv_rt2_response = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt2_id]}])
+    if assoc_priv_rt2_response['RouteTables']:
+        associations = assoc_priv_rt2_response['RouteTables'][0].get('Associations', [])
+        if not any(assoc['SubnetId'] == subnet_id for assoc in associations):
+            ec2_client.create_route_table_association(SubnetId=subnet_id, RouteTableId=priv_rt2_id)
+            print(f"Route Table Association created for Private Route Table 2 and subnet {subnet_id}")
+        else:
+            print(f"Route Table Association already exists for Private Route Table 2 and subnet {subnet_id}")
     else:
-        print(f"Route Table Association already exists for Private Route Table 2 and subnet {subnet_id}")
+        print(f"No Route Table found with ID: {priv_rt2_id}")
 
 # --- Add Routes to Private Route Tables ---
 # Route to NAT Gateway 1
-private_route1 = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt1_id]}])
-if private_route1['RouteTables']:
-    ec2_client.create_route(RouteTableId=priv_rt1_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway1_id)
-    print(f"Route added to Private Route Table 1 to NAT Gateway {nat_gateway1_id}")
+if nat_gateway1_id:
+    private_route1 = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt1_id]}])
+    if private_route1['RouteTables']:
+        ec2_client.create_route(RouteTableId=priv_rt1_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway1_id)
+        print(f"Route added to Private Route Table 1 to NAT Gateway {nat_gateway1_id}")
 
 # Route to NAT Gateway 2
-private_route2 = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt2_id]}])
-if private_route2['RouteTables']:
-    ec2_client.create_route(RouteTableId=priv_rt2_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway2_id)
-    print(f"Route added to Private Route Table 2 to NAT Gateway {nat_gateway2_id}")
+if nat_gateway2_id:
+    private_route2 = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt2_id]}])
+    if private_route2['RouteTables']:
+        ec2_client.create_route(RouteTableId=priv_rt2_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway2_id)
+        print(f"Route added to Private Route Table 2 to NAT Gateway {nat_gateway2_id}")
 
 # --- Security Group ---
 # Define security group names
