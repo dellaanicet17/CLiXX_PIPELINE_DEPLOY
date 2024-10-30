@@ -472,18 +472,16 @@ if priv_sg_id is None:
         {'IpProtocol': 'tcp', 'FromPort': 443, 'ToPort': 443, 'UserIdGroupPairs': [{'GroupId': pub_sg_id}]},
         {'IpProtocol': 'tcp', 'FromPort': 80, 'ToPort': 80, 'UserIdGroupPairs': [{'GroupId': pub_sg_id}]}
     ])
-
     # Tag the security group
     ec2_client.create_tags(Resources=[priv_sg_id], Tags=[{'Key': 'Name', 'Value': priv_sg_name}])
 else:
     print(f"Private Security Group already exists with ID: {priv_sg_id}")  # Print existing Private SG ID
 
-
 # --- Check DB Subnet Groups ---
 db_subnet_groups = rds_client.describe_db_subnet_groups()
 existing_subnet_group_names = {group["DBSubnetGroupName"] for group in db_subnet_groups["DBSubnetGroups"]}
-
 # Create MySQL DB Subnet Group if it does not exist
+
 if "mystack-app-db-dbsubnetgroup" not in existing_subnet_group_names:
     rds_client.create_db_subnet_group(
         DBSubnetGroupName="mystack-app-db-dbsubnetgroup",  # Fixed the naming
@@ -522,39 +520,60 @@ if "mystack-java_db-dbsubnetgroup" not in existing_subnet_group_names:
     )
     print("Created Java application DB Subnet Group.")
 
-
-# --- Check EFS Setup ---
-efs_file_systems = efs_client.describe_file_systems()
-existing_efs_names = {fs["CreationToken"] for fs in efs_file_systems["FileSystems"]}
-
-if "CLiXX-EFS" not in existing_efs_names:
-    file_system_id = efs_client.create_file_system(
-        CreationToken="CLiXX-EFS",
-        PerformanceMode="generalPurpose",
-        Encrypted=False,
-        ThroughputMode="bursting",
-        Tags=[{"Key": "Name", "Value": "CLiXX-EFS"}],
-    )["FileSystemId"]
+# --- Create EFS file system ---
+# Check if EFS with creation token exists
+efs_response = efs_client.describe_file_systems(
+    CreationToken='CLiXX-EFS'
+)
+# If EFS exists, proceed with the existing EFS
+if efs_response['FileSystems']:
+    file_system_id = efs_response['FileSystems'][0]['FileSystemId']
+    print(f"EFS already exists with FileSystemId: {file_system_id}")
 else:
-    file_system_id = next(fs["FileSystemId"] for fs in efs_file_systems["FileSystems"] if fs["CreationToken"] == "CLiXX-EFS")
-
-# --- Check EFS Mount Targets ---
-mount_targets = efs_client.describe_mount_targets(FileSystemId=file_system_id)
-existing_mount_targets = {mt["SubnetId"] for mt in mount_targets["MountTargets"]}
-
-if "private_subnet1_webapp_id" not in existing_mount_targets:
-    efs_client.create_mount_target(
-        FileSystemId=file_system_id,
-        SubnetId="private_subnet1_webapp_id",
-        SecurityGroups=["priv_sg_id"],
+    # Create EFS if it doesn't exist
+    efs_response = efs_client.create_file_system(
+        CreationToken='CLiXX-EFS',
+        PerformanceMode='generalPurpose'
     )
+    file_system_id = efs_response['FileSystemId']
+    print(f"EFS created with FileSystemId: {file_system_id}")
 
-if "private_subnet2_webapp_id" not in existing_mount_targets:
-    efs_client.create_mount_target(
-        FileSystemId=file_system_id,
-        SubnetId="private_subnet2_webapp_id",
-        SecurityGroups=["priv_sg_id"],
+# Wait until the EFS file system is in 'available' state
+while True:
+    efs_info = efs_client.describe_file_systems(
+        FileSystemId=file_system_id
     )
+    lifecycle_state = efs_info['FileSystems'][0]['LifeCycleState']
+    if lifecycle_state == 'available':
+        print(f"EFS CLiXX-EFS is now available with FileSystemId: {file_system_id}")
+        break
+    else:
+        print(f"EFS is in '{lifecycle_state}' state. Waiting for it to become available...")
+        time.sleep(10)
+
+# Add a tag to the EFS file system
+efs_client.create_tags(FileSystemId=file_system_id, Tags=[{'Key': 'Name', 'Value': 'CLiXX-EFS'}])
+
+# After ensuring the file system is available, create the mount targets in the private subnets
+private_subnet_ids = [private_subnet1_webapp_id, private_subnet2_webapp_id]
+for private_subnet_id in private_subnet_ids:
+    # Check if mount target already exists for the subnet
+    mount_targets_response = efs_client.describe_mount_targets(
+        FileSystemId=file_system_id
+    )
+    # Extract the list of subnet IDs for existing mount targets
+    existing_mount_targets = [mt['SubnetId'] for mt in mount_targets_response['MountTargets']]
+    # If the current subnet does not have a mount target, create one
+    if private_subnet_id not in existing_mount_targets:
+        mount_target_response = efs_client.create_mount_target(
+            FileSystemId=file_system_id,
+            SubnetId=private_subnet_id,
+            SecurityGroups=[priv_sg_id]
+        )
+        print(f"Mount target created in Private Subnet: {private_subnet_id}")
+    else:
+        print(f"Mount target already exists in Private Subnet: {private_subnet_id}")
+
 
 # --- Check Bastion Instances ---
 instances = ec2_resource.describe_instances(Filters=[{"Name": "tag:Name", "Values": ["MYSTACK-BASTION1", "MYSTACK-BASTION2"]}])
