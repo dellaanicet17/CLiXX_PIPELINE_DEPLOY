@@ -385,14 +385,24 @@ for subnet_id in [private_subnet2_webapp_id, private_subnet2_app_db_id, private_
 # Route to NAT Gateway 1
 private_route1 = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt1_id]}])
 if private_route1['RouteTables']:
-    ec2_client.create_route(RouteTableId=priv_rt1_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway1_id)
-    print(f"Route added to Private Route Table 1 to NAT Gateway {nat_gateway1_id}")
-
+    existing_routes1 = private_route1['RouteTables'][0]['Routes']
+    route_exists1 = any(route['DestinationCidrBlock'] == '0.0.0.0/0' for route in existing_routes1)
+    if not route_exists1:
+        ec2_client.create_route(RouteTableId=priv_rt1_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway1_id)
+        print(f"Route added to Private Route Table 1 to NAT Gateway {nat_gateway1_id}")
+    else:
+        print("Route to NAT Gateway 1 already exists in Private Route Table 1.")
 # Route to NAT Gateway 2
 private_route2 = ec2_client.describe_route_tables(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt2_id]}])
 if private_route2['RouteTables']:
-    ec2_client.create_route(RouteTableId=priv_rt2_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway2_id)
-    print(f"Route added to Private Route Table 2 to NAT Gateway {nat_gateway2_id}")
+    existing_routes2 = private_route2['RouteTables'][0]['Routes']
+    route_exists2 = any(route['DestinationCidrBlock'] == '0.0.0.0/0' for route in existing_routes2)
+    if not route_exists2:
+        ec2_client.create_route(RouteTableId=priv_rt2_id, DestinationCidrBlock='0.0.0.0/0', NatGatewayId=nat_gateway2_id)
+        print(f"Route added to Private Route Table 2 to NAT Gateway {nat_gateway2_id}")
+    else:
+        print("Route to NAT Gateway 2 already exists in Private Route Table 2.")
+
 
 # --- Security Group ---
 # Define security group names
