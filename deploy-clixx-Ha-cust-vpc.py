@@ -218,89 +218,101 @@ else:
     private_subnet2_java_app_id = private_subnet2_java_app['Subnet']['SubnetId']
     print(f"Private Subnet created: {private_subnet2_java_app_id} with Name tag 'MYSTACKPRIVSUB2-JAVAAPP'")
 
-# --- Internet Gateway ---
+## --- Internet Gateway ---
 internet_gateway = ec2_client.describe_internet_gateways(Filters=[{'Name': 'attachment.vpc-id', 'Values': [vpc_id]}])
+
 if not internet_gateway['InternetGateways']:
     igw = ec2_resource.create_internet_gateway()
     ec2_client.attach_internet_gateway(InternetGatewayId=igw.id, VpcId=vpc_id)
     ec2_client.create_tags(Resources=[igw.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKIGW'}])
     print(f"Internet Gateway created: {igw.id} with Name tag 'MYSTACKIGW'")
+    internet_gateway_id = igw.id  # Use the id directly
 else:
     print(f"Internet Gateway already exists for VPC {vpc_id}")
-internet_gateway_id = internet_gateway['InternetGateways'][0]['InternetGatewayId'] if internet_gateway['InternetGateways'] else igw['InternetGateways']['InternetGatewayId']
+    internet_gateway_id = internet_gateway['InternetGateways'][0]['InternetGatewayId'] 
 
 # --- Elastic IPs for NAT Gateways ---
-nat_eip1 = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP1']}])
-if not nat_eip1['Addresses']:
+# For NAT EIP 1
+nat_eip1_response = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP1']}])
+if not nat_eip1_response['Addresses']:
     nat_eip1 = ec2_resource.create_eip(Domain='vpc')
     ec2_client.create_tags(Resources=[nat_eip1.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP1'}])
     print(f"NAT Elastic IP created: {nat_eip1.id} with Name tag 'MYSTACKNAT-EIP1'")
+    nat_eip1_id = nat_eip1.id  # Use the id directly
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP1'")
-nat_eip1_id = nat_eip1['Addresses'][0]['AllocationId'] if nat_eip1['Addresses'] else nat_eip1['Addresses']['AllocationId']
+    nat_eip1_id = nat_eip1_response['Addresses'][0]['AllocationId']
 
-nat_eip2 = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP2']}])
-if not nat_eip2['Addresses']:
+# For NAT EIP 2
+nat_eip2_response = ec2_client.describe_addresses(Filters=[{'Name': 'tag:Name', 'Values': ['MYSTACKNAT-EIP2']}])
+if not nat_eip2_response['Addresses']:
     nat_eip2 = ec2_resource.create_eip(Domain='vpc')
     ec2_client.create_tags(Resources=[nat_eip2.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-EIP2'}])
     print(f"NAT Elastic IP created: {nat_eip2.id} with Name tag 'MYSTACKNAT-EIP2'")
+    nat_eip2_id = nat_eip2.id  # Use the id directly
 else:
     print(f"NAT Elastic IP already exists with Name tag 'MYSTACKNAT-EIP2'")
-nat_eip2_id = nat_eip2['Addresses'][0]['AllocationId'] if nat_eip2['Addresses'] else nat_eip2['Addresses']['AllocationId']
+    nat_eip2_id = nat_eip2_response['Addresses'][0]['AllocationId']
 
 # --- NAT Gateways ---
-nat_gateway1 = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
-if not nat_gateway1['NatGateways']:
+# For NAT Gateway 1
+nat_gateway1_response = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
+if not nat_gateway1_response['NatGateways']:
     nat_gateway1 = ec2_resource.create_nat_gateway(AllocationId=nat_eip1_id, SubnetId=public_subnet1_id)
     ec2_client.create_tags(Resources=[nat_gateway1.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW1'}])
     print(f"NAT Gateway created: {nat_gateway1.id} with Name tag 'MYSTACKNAT-GW1'")
+    nat_gateway1_id = nat_gateway1.id  # Use the id directly
 else:
     print(f"NAT Gateway already exists in subnet {public_subnet1_id}")
-nat_gateway1_id = nat_gateway1['NatGateways'][0]['NatGatewayId'] if nat_gateway1['NatGateways'] else nat_gateway1['NatGateways']['NatGatewayId']
+    nat_gateway1_id = nat_gateway1_response['NatGateways'][0]['NatGatewayId']
 
-nat_gateway2 = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet2_id]}])
-if not nat_gateway2['NatGateways']:
+# For NAT Gateway 2
+nat_gateway2_response = ec2_client.describe_nat_gateways(Filters=[{'Name': 'subnet-id', 'Values': [public_subnet2_id]}])
+if not nat_gateway2_response['NatGateways']:
     nat_gateway2 = ec2_resource.create_nat_gateway(AllocationId=nat_eip2_id, SubnetId=public_subnet2_id)
     ec2_client.create_tags(Resources=[nat_gateway2.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKNAT-GW2'}])
     print(f"NAT Gateway created: {nat_gateway2.id} with Name tag 'MYSTACKNAT-GW2'")
+    nat_gateway2_id = nat_gateway2.id  # Use the id directly
 else:
     print(f"NAT Gateway already exists in subnet {public_subnet2_id}")
-nat_gateway2_id = nat_gateway2['NatGateways'][0]['NatGatewayId'] if nat_gateway2['NatGateways'] else nat_gateway2['NatGateways']['NatGatewayId']
+    nat_gateway2_id = nat_gateway2_response['NatGateways'][0]['NatGatewayId']
 
 # --- Public Route Tables ---
 # Public Route Table 1
-pub_rt1 = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT1']}])
-if not pub_rt1['RouteTables']:
+pub_rt1_response = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT1']}])
+if not pub_rt1_response['RouteTables']:
     pub_rt1 = ec2_resource.create_route_table(VpcId=vpc_id)
     ec2_client.create_route(DestinationCidrBlock='0.0.0.0/0', GatewayId=internet_gateway_id, RouteTableId=pub_rt1.id)
     ec2_client.create_tags(Resources=[pub_rt1.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKPUB-RT1'}])
     print(f"Public Route Table 1 created: {pub_rt1.id} with Name tag 'MYSTACKPUB-RT1'")
+    pub_rt1_id = pub_rt1.id  # Use the id directly
 else:
-    print(f"Public Route Table 1 already exists: {pub_rt1['RouteTables'][0]['RouteTableId']}")
-pub_rt1_id = pub_rt1['RouteTables'][0]['RouteTableId'] if pub_rt1['RouteTables'] else pub_rt1['RouteTables']['RouteTableId']
+    print(f"Public Route Table 1 already exists: {pub_rt1_response['RouteTables'][0]['RouteTableId']}")
+    pub_rt1_id = pub_rt1_response['RouteTables'][0]['RouteTableId']
 
 # Public Route Table 2
-pub_rt2 = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT2']}])
-if not pub_rt2['RouteTables']:
+pub_rt2_response = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPUB-RT2']}])
+if not pub_rt2_response['RouteTables']:
     pub_rt2 = ec2_resource.create_route_table(VpcId=vpc_id)
     ec2_client.create_route(DestinationCidrBlock='0.0.0.0/0', GatewayId=internet_gateway_id, RouteTableId=pub_rt2.id)
     ec2_client.create_tags(Resources=[pub_rt2.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKPUB-RT2'}])
     print(f"Public Route Table 2 created: {pub_rt2.id} with Name tag 'MYSTACKPUB-RT2'")
+    pub_rt2_id = pub_rt2.id  # Use the id directly
 else:
-    print(f"Public Route Table 2 already exists: {pub_rt2['RouteTables'][0]['RouteTableId']}")
-pub_rt2_id = pub_rt2['RouteTables'][0]['RouteTableId'] if pub_rt2['RouteTables'] else pub_rt2['RouteTables']['RouteTableId']
+    print(f"Public Route Table 2 already exists: {pub_rt2_response['RouteTables'][0]['RouteTableId']}")
+    pub_rt2_id = pub_rt2_response['RouteTables'][0]['RouteTableId']
 
 # --- Route Table Associations for Public Route Table 1 ---
-assoc_pub_rt1 = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt1_id]}, {'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
-if not assoc_pub_rt1['Associations']:
+assoc_pub_rt1_response = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt1_id]}, {'Name': 'subnet-id', 'Values': [public_subnet1_id]}])
+if not assoc_pub_rt1_response['Associations']:
     ec2_client.create_route_table_association(SubnetId=public_subnet1_id, RouteTableId=pub_rt1_id)
     print(f"Route Table Association created for Public Route Table 1 and subnet {public_subnet1_id}")
 else:
     print(f"Route Table Association already exists for Public Route Table 1 and subnet {public_subnet1_id}")
 
 # --- Route Table Associations for Public Route Table 2 ---
-assoc_pub_rt2 = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt2_id]}, {'Name': 'subnet-id', 'Values': [public_subnet2_id]}])
-if not assoc_pub_rt2['Associations']:
+assoc_pub_rt2_response = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [pub_rt2_id]}, {'Name': 'subnet-id', 'Values': [public_subnet2_id]}])
+if not assoc_pub_rt2_response['Associations']:
     ec2_client.create_route_table_association(SubnetId=public_subnet2_id, RouteTableId=pub_rt2_id)
     print(f"Route Table Association created for Public Route Table 2 and subnet {public_subnet2_id}")
 else:
@@ -308,33 +320,35 @@ else:
 
 # --- Private Route Tables ---
 # Private Route Table 1
-priv_rt1 = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPRIV-RT1']}])
-if not priv_rt1['RouteTables']:
+priv_rt1_response = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPRIV-RT1']}])
+if not priv_rt1_response['RouteTables']:
     priv_rt1 = ec2_resource.create_route_table(VpcId=vpc_id)
     ec2_client.create_tags(Resources=[priv_rt1.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKPRIV-RT1'}])
     print(f"Private Route Table 1 created: {priv_rt1.id} with Name tag 'MYSTACKPRIV-RT1'")
+    priv_rt1_id = priv_rt1.id  # Use the id directly
 else:
-    print(f"Private Route Table 1 already exists: {priv_rt1['RouteTables'][0]['RouteTableId']}")
-priv_rt1_id = priv_rt1['RouteTables'][0]['RouteTableId'] if priv_rt1['RouteTables'] else priv_rt1['RouteTables']['RouteTableId']
+    print(f"Private Route Table 1 already exists: {priv_rt1_response['RouteTables'][0]['RouteTableId']}")
+    priv_rt1_id = priv_rt1_response['RouteTables'][0]['RouteTableId']
 
 # --- Route Table Associations for Private Route Table 1 --- private_subnet1_app_db
 for subnet_id in [private_subnet1_webapp_id, private_subnet1_app_db_id, private_subnet1_oracle_db_id, private_subnet1_java_db_id, private_subnet1_java_app_id]:
-    assoc_priv_rt1 = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt1_id]}, {'Name': 'subnet-id', 'Values': [subnet_id]}])
-    if not assoc_priv_rt1['Associations']:
+    assoc_priv_rt1_response = ec2_client.describe_route_table_associations(Filters=[{'Name': 'route-table-id', 'Values': [priv_rt1_id]}, {'Name': 'subnet-id', 'Values': [subnet_id]}])
+    if not assoc_priv_rt1_response['Associations']:
         ec2_client.create_route_table_association(SubnetId=subnet_id, RouteTableId=priv_rt1_id)
         print(f"Route Table Association created for Private Route Table 1 and subnet {subnet_id}")
     else:
         print(f"Route Table Association already exists for Private Route Table 1 and subnet {subnet_id}")
 
 # Private Route Table 2
-priv_rt2 = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPRIV-RT2']}])
-if not priv_rt2['RouteTables']:
+priv_rt2_response = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}, {'Name': 'tag:Name', 'Values': ['MYSTACKPRIV-RT2']}])
+if not priv_rt2_response['RouteTables']:
     priv_rt2 = ec2_resource.create_route_table(VpcId=vpc_id)
     ec2_client.create_tags(Resources=[priv_rt2.id], Tags=[{'Key': 'Name', 'Value': 'MYSTACKPRIV-RT2'}])
     print(f"Private Route Table 2 created: {priv_rt2.id} with Name tag 'MYSTACKPRIV-RT2'")
+    priv_rt2_id = priv_rt2.id  # Use the id directly
 else:
-    print(f"Private Route Table 2 already exists: {priv_rt2['RouteTables'][0]['RouteTableId']}")
-priv_rt2_id = priv_rt2['RouteTables'][0]['RouteTableId'] if priv_rt2['RouteTables'] else priv_rt2['RouteTables']['RouteTableId']
+    print(f"Private Route Table 2 already exists: {priv_rt2_response['RouteTables'][0]['RouteTableId']}")
+    priv_rt2_id = priv_rt2_response['RouteTables'][0]['RouteTableId']
 
 # --- Route Table Associations for Private Route Table 2 ---
 for subnet_id in [private_subnet2_webapp_id, private_subnet2_app_db_id, private_subnet2_oracle_db_id, private_subnet2_java_db_id, private_subnet2_java_app_id]:
