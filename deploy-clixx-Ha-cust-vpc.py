@@ -768,8 +768,9 @@ else:
         print(f"DB Snapshot '{db_snapshot_identifier}' not found.")
 
 # --- Create Route 53 record for the load balancer ---
-route53_response = route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
-
+route53_response = route53_client.list_resource_record_sets(
+    HostedZoneId=hosted_zone_id
+)
 # Check if the record already exists
 record_exists = any(record['Name'] == record_name for record in route53_response['ResourceRecordSets'])
 if not record_exists:
@@ -783,8 +784,8 @@ if not record_exists:
                     'Name': record_name,
                     'Type': 'A',
                     'AliasTarget': {
-                        'HostedZoneId': canonical_hosted_zone_id,
-                        'DNSName': load_balancer_dns,
+                        'HostedZoneId': load_balancer['LoadBalancers'][0]['CanonicalHostedZoneId'],
+                        'DNSName': load_balancer['LoadBalancers'][0]['DNSName'],
                         'EvaluateTargetHealth': False
                     }
                 }
